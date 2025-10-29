@@ -161,6 +161,23 @@ background = (
     .project("albersUsa")
 )
 
+# --- Add state labels ---
+state_centroids = alt.topo_feature(data.us_10m.url, feature="state-capitals")
+
+state_labels = (
+    alt.Chart(state_centroids)
+    .mark_text(
+        fontSize=9,
+        fontWeight="bold",
+        color="dimgray"
+    )
+    .encode(
+        longitude="lon:Q",
+        latitude="lat:Q",
+        text="name:N"
+    )
+)
+
 # --- Aggregate bubbles (one row per origin) ---
 origins = (
     out_state_move.groupby("foundStateAbb", as_index=False)

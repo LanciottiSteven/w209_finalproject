@@ -3,3 +3,4 @@ altair
 pandas
 numpy
 vega_datasets
+streamlit-vega-lite-events
