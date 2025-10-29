@@ -419,7 +419,7 @@ if data_option:
         # the shape of a hexagon
         hexagon = "M0,-2.3094010768L2,-1.1547005384 2,1.1547005384 0,2.3094010768 -2,1.1547005384 -2,-1.1547005384Z"
 
-        alt.Chart(filtered_df).mark_point(size=size**2, shape=hexagon).encode(
+        hex_chart = alt.Chart(filtered_df).mark_point(size=size**2, shape=hexagon).encode(
             alt.X('contact_state:N')
                 .title('State')
                 .axis(grid=False, tickOpacity=0, domainOpacity=0),
@@ -437,6 +437,7 @@ if data_option:
         ).configure_view(
             strokeWidth=0
         )
+        st.altair_chart(hex_chart, width='stretch')
     else:
         # Size of the hexbins
         size = 10
@@ -452,7 +453,7 @@ if data_option:
         # the shape of a hexagon
         hexagon = "M0,-2.3094010768L2,-1.1547005384 2,1.1547005384 0,2.3094010768 -2,1.1547005384 -2,-1.1547005384Z"
 
-        alt.Chart(filtered_df).mark_point(size=size**2, shape=hexagon).encode(
+        hex_chart = alt.Chart(filtered_df).mark_point(size=size**2, shape=hexagon).encode(
             alt.X('FoundState:N')
                 .title('State')
                 .axis(grid=False, tickOpacity=0, domainOpacity=0),
@@ -470,6 +471,7 @@ if data_option:
         ).configure_view(
             strokeWidth=0
         )
+        st.altair_chart(hex_chart, width='stretch')
 
 
 
