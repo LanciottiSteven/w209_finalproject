@@ -256,16 +256,20 @@ st.header(
 
 colA, colB, colC = st.columns([1, 1, 1])
 
-option = colA.selectbox(
+data_option = colA.selectbox(
     "Dog Movement Direction",
     ("Within State", "Out of State", "Into State"),
     index=None,
     placeholder="Select direction...",
 )
-st.write("You selected:", option)
+st.write("You selected:", data_option)
 
-if option:
+if data_option:
     st.write('something is selected')
+    if data_option == "Within State":
+        st.write('it worked')
+    else:
+        st.write('it didnt work')
 else:
     st.write('something is not selected')
 # -------------------------------------------------
