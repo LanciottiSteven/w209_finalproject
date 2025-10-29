@@ -15,9 +15,11 @@ st.header(
 st.markdown("We will visualize the movement of dogs via adoption. Our datasets will be from Kaggle and from Shelter Animals Count. We will use a map of the United States to show (1) where dogs are being adopted from and adopted to at a state-to-state level, and (2) which states tend to have more dogs leave them via adoption vs. enter them via adoption.")
 
 
-DATA_PATH1 = os.path.join("Data", "allDogDescriptions.csv")
-DATA_PATH2 = os.path.join("Data", "dogTravel.xlsx")
+# DATA_PATH1 = os.path.join("Data", "allDogDescriptions.csv")
+# DATA_PATH2 = os.path.join("Data", "dogTravel.xlsx")
 
+DATA_PATH1 = "https://github.com/LanciottiSteven/w209_finalproject/blob/main/Data/allDogDescriptions.csv"
+DATA_PATH2 = "https://github.com/LanciottiSteven/w209_finalproject/blob/main/Data/dogTravel.xlsx"
 
 k_dog_desc = pd.read_csv(DATA_PATH1) 
 k_dog_travel = pd.read_excel(DATA_PATH2)
