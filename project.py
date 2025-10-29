@@ -457,8 +457,14 @@ if data_option:
 
         # the shape of a hexagon
         hexagon = "M0,-2.3094010768L2,-1.1547005384 2,1.1547005384 0,2.3094010768 -2,1.1547005384 -2,-1.1547005384Z"
+        dog_path = (
+            "M-1.6,-0.2 L-0.8,-0.2 L-0.6,-0.6 L-0.3,-0.6 L-0.3,-0.2 "
+            "L0.6,-0.2 L0.9,-0.35 L1.2,-0.2 L1.2,0.1 L0.9,0.2 L0.6,0.2 "
+            "L0.55,0.5 L0.3,0.5 L0.3,0.2 L0.0,0.2 L-0.2,0.6 L-0.4,0.6 "
+            "L-0.4,0.2 L-0.9,0.2 L-1.1,0.4 L-1.3,0.2 L-1.05,0.05 L-1.6,-0.2 Z"
+        )
 
-        hex_chart = alt.Chart(filtered_df).mark_point(size=size**2, shape=hexagon).encode(
+        hex_chart = alt.Chart(filtered_df).mark_point(size=size**2, shape=dog_path).encode(
             alt.X('contact_state:N')
                 .title('State')
                 .axis(grid=False, tickOpacity=0, domainOpacity=0),
@@ -498,8 +504,15 @@ if data_option:
 
         # the shape of a hexagon
         hexagon = "M0,-2.3094010768L2,-1.1547005384 2,1.1547005384 0,2.3094010768 -2,1.1547005384 -2,-1.1547005384Z"
+        
+        dog_path = (
+            "M-1.6,-0.2 L-0.8,-0.2 L-0.6,-0.6 L-0.3,-0.6 L-0.3,-0.2 "
+            "L0.6,-0.2 L0.9,-0.35 L1.2,-0.2 L1.2,0.1 L0.9,0.2 L0.6,0.2 "
+            "L0.55,0.5 L0.3,0.5 L0.3,0.2 L0.0,0.2 L-0.2,0.6 L-0.4,0.6 "
+            "L-0.4,0.2 L-0.9,0.2 L-1.1,0.4 L-1.3,0.2 L-1.05,0.05 L-1.6,-0.2 Z"
+        )
 
-        hex_chart = alt.Chart(filtered_df).mark_point(size=size**2, shape=hexagon).encode(
+        hex_chart = alt.Chart(filtered_df).mark_point(size=size**2, shape=dog_path).encode(
             alt.X('FoundState:N')
                 .title('State')
                 .axis(grid=False, tickOpacity=0, domainOpacity=0),
