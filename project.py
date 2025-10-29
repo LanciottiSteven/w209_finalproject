@@ -401,7 +401,7 @@ if data_option:
         tooltip=tooltip,
     )
 
-    second_map.pydeck_chart(deck, width='stretch')
+    second_map.pydeck_chart(deck)
 else:
     st.write('Select Dog Movement Direction to Generate Visualizations')
 
