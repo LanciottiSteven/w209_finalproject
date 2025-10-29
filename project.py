@@ -6,6 +6,8 @@ import numpy as np
 import json, urllib.request
 import time
 import os
+from vega_datasets import data
+
 
 st.title("W209 Final Project - Mid Term Presentation")
 st.header(
@@ -24,7 +26,7 @@ DATA_PATH2 = "Data/dogTravel_clean.csv"
 k_dog_desc = pd.read_csv(DATA_PATH1) 
 k_dog_travel = pd.read_csv(DATA_PATH2)
 
-st.dataframe(k_dog_travel)
+# st.dataframe(k_dog_travel)
 
 
 dog_travel_df = k_dog_travel.dropna(subset=['FoundState'])
@@ -149,4 +151,72 @@ in_state_move = merged_df[merged_df['contact_state'] == merged_df['foundStateAbb
 out_state_move = merged_df[merged_df['contact_state'] != merged_df['foundStateAbb']]
 
 
+# Build the First Map***********************************
+# --- Background map ---
+states = alt.topo_feature(data.us_10m.url, feature="states")
+background = (
+    alt.Chart(states)
+    .mark_geoshape(fill="lightgray", stroke="white")
+    .properties(width=750, height=500)
+    .project("albersUsa")
+)
 
+# --- Aggregate bubbles (one row per origin) ---
+origins = (
+    out_state_move.groupby("foundStateAbb", as_index=False)
+      .agg(
+          routes=("contact_state", "nunique"),   # unique destination states per origin
+          origin_lon=("origin_lon", "mean"),
+          origin_lat=("origin_lat", "mean"),
+      )
+)
+
+# --- Click selection: single select on origin; double-click to clear ---
+sel = alt.selection_point(
+    name="origin_click",
+    fields=["foundStateAbb"],
+    on="click",
+    clear="dblclick",
+)
+
+# --- Connections (filtered by the clicked origin when selection is active) ---
+connections = (
+    alt.Chart(out_state_move)
+    .transform_filter(sel)   # shows all when nothing selected; focuses when clicked
+    .mark_rule()
+    .encode(
+        latitude="origin_lat:Q",
+        longitude="origin_lon:Q",
+        latitude2="dest_lat:Q",
+        longitude2="dest_lon:Q",
+        opacity=alt.value(0.35),
+        tooltip=[
+            alt.Tooltip("foundStateAbb:N", title="Origin"),
+            alt.Tooltip("contact_state:N", title="Destination"),
+        ],
+    )
+)
+
+# --- Points (click targets) ---
+points = (
+    alt.Chart(origins)
+    .mark_circle()
+    .encode(
+        latitude="origin_lat:Q",
+        longitude="origin_lon:Q",
+        size=alt.Size("routes:Q", scale=alt.Scale(range=[0, 1000]), legend=None),
+        order=alt.Order("routes:Q", sort="descending"),
+        tooltip=[
+            alt.Tooltip("foundStateAbb:N", title="Origin"),
+            alt.Tooltip("routes:Q", title="Unique destinations"),
+        ],
+        # highlight selected origin
+        opacity=alt.condition(sel, alt.value(1), alt.value(0.7)),
+        stroke=alt.condition(sel, alt.value("black"), alt.value(None)),
+        strokeWidth=alt.condition(sel, alt.value(2), alt.value(0)),
+    )
+    .add_params(sel)   # attach the selection ONCE (to the points layer)
+)
+
+chart = alt.layer(background, connections, points).configure_view(stroke=None)
+st.altair_chart(chart, use_container_width=True)
