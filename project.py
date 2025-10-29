@@ -267,10 +267,10 @@ df = in_state_move.dropna(subset=need).copy()
 dest_points = df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})[["lat", "lon"]]
 
 # Optional: a single points dataframe (both origin + destination)
-points_both = pd.concat([
-    df[["origin_lat", "origin_lon"]].rename(columns={"origin_lat": "lat", "origin_lon": "lon"}).assign(kind="Origin"),
-    df[["dest_lat", "dest_lon"]].rename(columns={"dest_lat": "lat", "dest_lon": "lon"}).assign(kind="Destination"),
-], ignore_index=True)
+# points_both = pd.concat([
+#     df[["origin_lat", "origin_lon"]].rename(columns={"origin_lat": "lat", "origin_lon": "lon"}).assign(kind="Origin"),
+#     df[["dest_lat", "dest_lon"]].rename(columns={"dest_lat": "lat", "dest_lon": "lon"}).assign(kind="Destination"),
+# ], ignore_index=True)
 
 # -------------------------------------------------
 # 2) Pick a reasonable initial view
@@ -301,7 +301,7 @@ hex_layer = pdk.Layer(
 
 scatter_layer = pdk.Layer(
     "ScatterplotLayer",
-    data=points_both,            # show both origin and destination points
+    data=dest_points,            # show both origin and destination points
     get_position="[lon, lat]",
     get_fill_color="[200, 30, 0, 160]",  # you can color by kind if you want
     get_radius=20000,            # meters; adjust with zoom
