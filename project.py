@@ -441,7 +441,7 @@ if data_option:
         ).configure_view(
             strokeWidth=0
         )
-        first_hex.altair_chart(hex_chart, width='stretch', height='stretch')
+        first_hex.altair_chart(hex_chart, height='stretch')
     else:
         # Size of the hexbins
         size = 10
@@ -475,7 +475,7 @@ if data_option:
         ).configure_view(
             strokeWidth=0
         )
-        first_hex.altair_chart(hex_chart, width='stretch',height='stretch')
+        first_hex.altair_chart(hex_chart,height='stretch')
 
 first_scatter = st.empty()
 if data_option:
