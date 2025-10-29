@@ -249,7 +249,20 @@ st.altair_chart(chart, width='stretch')
 # st.write("selected:",sel)
 
 
-st.title("Dog Movement — Hex Bins + Points (pydeck)")
+st.header(
+    "Dog Movements Across the United States - Filters",
+    divider="blue"
+)
+
+colA, colB, colC = st.columns([1, 1, 1])
+
+option = colA.selectbox(
+    "Dog Movement Direction",
+    ("Within State", "Out of State", "Into State"),
+    index=None,
+    placeholder="Select direction...",
+)
+st.write("You selected:", option)
 
 # -------------------------------------------------
 # 1) Load / prepare your data
@@ -341,4 +354,4 @@ deck = pdk.Deck(
 
 st.pydeck_chart(deck, width='stretch')
 
-st.dataframe(dest_points)
+# st.dataframe(dest_points)
