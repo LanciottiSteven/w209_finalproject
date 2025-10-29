@@ -299,14 +299,14 @@ hex_layer = pdk.Layer(
     coverage=1.0,
 )
 
-scatter_layer = pdk.Layer(
-    "ScatterplotLayer",
-    data=dest_points,            # show both origin and destination points
-    get_position="[lon, lat]",
-    get_fill_color="[200, 30, 0, 160]",  # you can color by kind if you want
-    get_radius=20000,            # meters; adjust with zoom
-    pickable=True,
-)
+# scatter_layer = pdk.Layer(
+#     "ScatterplotLayer",
+#     data=dest_points,            # show both origin and destination points
+#     get_position="[lon, lat]",
+#     get_fill_color="[200, 30, 0, 160]",  # you can color by kind if you want
+#     get_radius=20000,            # meters; adjust with zoom
+#     pickable=True,
+# )
 
 # Optional: color origins and destinations differently
 # scatter_layer = pdk.Layer(
@@ -324,7 +324,7 @@ scatter_layer = pdk.Layer(
 deck = pdk.Deck(
     map_style=None,  # Let Streamlit theme decide; avoids needing a Mapbox token
     initial_view_state=view_state,
-    layers=[hex_layer, scatter_layer],
+    layers=[hex_layer],
     tooltip={
         "html": "<b>lat:</b> {lat}<br/><b>lon:</b> {lon}",
         "style": {"backgroundColor": "white", "color": "black"}
