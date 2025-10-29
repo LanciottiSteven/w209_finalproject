@@ -297,28 +297,48 @@ if data_option:
 
         
     elif data_option == "To State":
-        # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
-        need = ["dest_lat", "dest_lon", "contact_state"]
-        df = out_state_move.dropna(subset=need).copy()
+        if breed_option:
+            filtered_df = out_state_move[out_state_move['breed_primary'].isin(breed_option)]    
+            # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+            need = ["dest_lat", "dest_lon", "contact_state"]
+            df = filtered_df.dropna(subset=need).copy()
 
-        # HexagonLayer expects columns named "lat" and "lon".
-        # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
-        dest_points = (
-            df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
-            .assign(state=df["contact_state"])
-        )
+            dest_points = (
+                df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
+                .assign(state=df["contact_state"])
+            )
+        else:
+            # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+            need = ["dest_lat", "dest_lon", "contact_state"]
+            df = out_state_move.dropna(subset=need).copy()
+
+            # HexagonLayer expects columns named "lat" and "lon".
+            # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
+            dest_points = (
+                df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
+                .assign(state=df["contact_state"])
+            )
 
     elif data_option == "From State":
-        # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
-        need = ["origin_lat", "origin_lon", "foundStateAbb"]
-        df = out_state_move.dropna(subset=need).copy()
+        if breed_option:
+            filtered_df = out_state_move[out_state_move['breed_primary'].isin(breed_option)]
+            need = ["origin_lat", "origin_lon", "foundStateAbb"]
+            df = filtered_df.dropna(subset=need).copy()
+            dest_points = (
+                df.rename(columns={"origin_lat": "lat", "origin_lon": "lon"})
+                .assign(state=df["foundStateAbb"])
+            )
+        else:    
+            # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+            need = ["origin_lat", "origin_lon", "foundStateAbb"]
+            df = out_state_move.dropna(subset=need).copy()
 
-        # HexagonLayer expects columns named "lat" and "lon".
-        # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
-        dest_points = (
-            df.rename(columns={"origin_lat": "lat", "origin_lon": "lon"})
-            .assign(state=df["foundStateAbb"])
-        )
+            # HexagonLayer expects columns named "lat" and "lon".
+            # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
+            dest_points = (
+                df.rename(columns={"origin_lat": "lat", "origin_lon": "lon"})
+                .assign(state=df["foundStateAbb"])
+            )
 else:
     st.write('No Item Selected')
 
