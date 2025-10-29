@@ -19,10 +19,10 @@ st.markdown("We will visualize the movement of dogs via adoption. Our datasets w
 # DATA_PATH2 = os.path.join("Data", "dogTravel.xlsx")
 
 DATA_PATH1 = "Data/allDogDescriptions.csv"
-DATA_PATH2 = "Data/dogTravel.xlsx"
+DATA_PATH2 = "Data/dogTravel_clean.csv"
 
 k_dog_desc = pd.read_csv(DATA_PATH1) 
-k_dog_travel = pd.read_excel(DATA_PATH2)
+k_dog_travel = pd.read_csv(DATA_PATH2)
 
 st.dataframe(k_dog_travel)
 
