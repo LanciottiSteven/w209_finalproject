@@ -400,9 +400,76 @@ if data_option:
 
     st.pydeck_chart(deck, width='stretch')
 else:
-    st.write('Select Dog Movement Direction to Generate Map')
+    st.write('Select Dog Movement Direction to Generate Visualizations')
 
+#____Hex Chart_____
+if data_option:
+    if data_option == "To State":
+        # Size of the hexbins
+        size = 10
+        # Count of distinct x features
+        xFeaturesCount = len(filtered_df['contact_state'].unique())
+        # Count of distinct y features
+        yFeaturesCount = len(filtered_df['breed_primary'].unique())
+        # Name of the x field
+        xField = 'contact_state'
+        # Name of the y field
+        yField = 'breed_primary'
 
+        # the shape of a hexagon
+        hexagon = "M0,-2.3094010768L2,-1.1547005384 2,1.1547005384 0,2.3094010768 -2,1.1547005384 -2,-1.1547005384Z"
+
+        alt.Chart(filtered_df).mark_point(size=size**2, shape=hexagon).encode(
+            alt.X('contact_state:N')
+                .title('State')
+                .axis(grid=False, tickOpacity=0, domainOpacity=0),
+            alt.Y('breed_primary:O')
+                .title('Breed')
+                .axis(labelPadding=20, tickOpacity=0, domainOpacity=0),
+            stroke=alt.value('black'),
+            strokeWidth=alt.value(0.2),
+            fill=alt.Fill('count(id):Q').scale(scheme='darkblue'),
+            tooltip=['contact_state:N', 'breed_primary:N']
+        ).properties(
+            # Exact scaling factors to make the hexbins fit
+            width=size * xFeaturesCount * 2,
+            height=size * yFeaturesCount * 1.7320508076,  # 1.7320508076 is approx. sin(60°)*2
+        ).configure_view(
+            strokeWidth=0
+        )
+    else:
+        # Size of the hexbins
+        size = 10
+        # Count of distinct x features
+        xFeaturesCount = len(filtered_df['FoundState'].unique())
+        # Count of distinct y features
+        yFeaturesCount = len(filtered_df['breed_primary'].unique())
+        # Name of the x field
+        xField = 'FoundState'
+        # Name of the y field
+        yField = 'breed_primary'
+
+        # the shape of a hexagon
+        hexagon = "M0,-2.3094010768L2,-1.1547005384 2,1.1547005384 0,2.3094010768 -2,1.1547005384 -2,-1.1547005384Z"
+
+        alt.Chart(filtered_df).mark_point(size=size**2, shape=hexagon).encode(
+            alt.X('FoundState:N')
+                .title('State')
+                .axis(grid=False, tickOpacity=0, domainOpacity=0),
+            alt.Y('breed_primary:O')
+                .title('Breed')
+                .axis(labelPadding=20, tickOpacity=0, domainOpacity=0),
+            stroke=alt.value('black'),
+            strokeWidth=alt.value(0.2),
+            fill=alt.Fill('count(id):Q').scale(scheme='darkblue'),
+            tooltip=['FoundState:N', 'breed_primary:N']
+        ).properties(
+            # Exact scaling factors to make the hexbins fit
+            width=size * xFeaturesCount * 2,
+            height=size * yFeaturesCount * 1.7320508076,  # 1.7320508076 is approx. sin(60°)*2
+        ).configure_view(
+            strokeWidth=0
+        )
 
 
 
