@@ -322,7 +322,7 @@ hex_layer = pdk.Layer(
 tooltip = {
     "html": """
     <div style="font-family:system-ui;">
-      <b>State:</b> {state}<br/>
+      <b>State:</b> {contact_state}<br/>
       <b>Count:</b> {count}
     </div>
     """,
