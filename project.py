@@ -153,8 +153,7 @@ in_state_move = merged_df[merged_df['contact_state'] == merged_df['foundStateAbb
 out_state_move = merged_df[merged_df['contact_state'] != merged_df['foundStateAbb']]
 
 first_map = st.empty()
-second_map = st.empty()
-first_hex = st.empty()
+
 
 # Build the First Map***********************************
 # --- Background map ---
@@ -275,6 +274,7 @@ breed_option = colB.multiselect(
     placeholder="Select Breed...",
 )
 
+second_map = st.empty()
 
 if data_option:
     # st.write('something is selected')
@@ -405,6 +405,7 @@ if data_option:
 else:
     st.write('Select Dog Movement Direction to Generate Visualizations')
 
+first_hex = st.empty()
 #____Hex Chart_____
 if data_option:
     if data_option == "To State":
