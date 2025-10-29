@@ -3,7 +3,6 @@ import altair as alt
 import pandas as pd
 from numpy.random import default_rng as rng
 import numpy as np
-from vega_datasets import data
 import json, urllib.request
 import time
 
