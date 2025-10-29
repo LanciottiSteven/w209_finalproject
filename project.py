@@ -285,57 +285,7 @@ if data_option:
             .assign(state=df["contact_state"])
         )
 
-        counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
-        dest_points = dest_points.merge(counts, on="state", how="left")
-
-        # -------------------------------------------------
-        # 2) Pick a reasonable initial view
-        # -------------------------------------------------
-        def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
-            lat = float(np.nanmean(d["lat"]))
-            lon = float(np.nanmean(d["lon"]))
-            return pdk.ViewState(latitude=lat, longitude=lon, zoom=4, pitch=40)
-
-        view_state = view_from_df(dest_points)
-
-        # -------------------------------------------------
-        # 3) Build layers (mirroring your example)
-        # -------------------------------------------------
-        hex_layer = pdk.Layer(
-            "HexagonLayer",
-            data=dest_points,
-            get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
-            radius=40000,                # ~40km hex
-            elevation_scale=100,
-            elevation_range=[0, 10000],
-            extruded=True,
-            pickable=True,
-            coverage=1.0,
-        )
-
-        # 4) Tooltip (state + count)
-        # -------------------------------------------------
-        tooltip = {
-            "html": """
-            <div style="font-family:system-ui;">
-            <b>State:</b> {contact_state}<br/>
-            <b>Count:</b> {count}
-            </div>
-            """,
-            "style": {"backgroundColor": "white", "color": "black"},
-        }
-
-        # -------------------------------------------------
-        # 4) Deck and render
-        # -------------------------------------------------
-        deck = pdk.Deck(
-            map_style=None,                # Streamlit theme map
-            initial_view_state=view_state,
-            layers=[hex_layer],
-            tooltip=tooltip,
-        )
-
-        st.pydeck_chart(deck, width='stretch')
+        
     elif data_option == "To State":
         # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
         need = ["dest_lat", "dest_lon", "contact_state"]
@@ -348,57 +298,6 @@ if data_option:
             .assign(state=df["contact_state"])
         )
 
-        counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
-        dest_points = dest_points.merge(counts, on="state", how="left")
-
-        # -------------------------------------------------
-        # 2) Pick a reasonable initial view
-        # -------------------------------------------------
-        def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
-            lat = float(np.nanmean(d["lat"]))
-            lon = float(np.nanmean(d["lon"]))
-            return pdk.ViewState(latitude=lat, longitude=lon, zoom=4, pitch=40)
-
-        view_state = view_from_df(dest_points)
-
-        # -------------------------------------------------
-        # 3) Build layers (mirroring your example)
-        # -------------------------------------------------
-        hex_layer = pdk.Layer(
-            "HexagonLayer",
-            data=dest_points,
-            get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
-            radius=40000,                # ~40km hex
-            elevation_scale=100,
-            elevation_range=[0, 10000],
-            extruded=True,
-            pickable=True,
-            coverage=1.0,
-        )
-
-        # 4) Tooltip (state + count)
-        # -------------------------------------------------
-        tooltip = {
-            "html": """
-            <div style="font-family:system-ui;">
-            <b>State:</b> {contact_state}<br/>
-            <b>Count:</b> {count}
-            </div>
-            """,
-            "style": {"backgroundColor": "white", "color": "black"},
-        }
-
-        # -------------------------------------------------
-        # 4) Deck and render
-        # -------------------------------------------------
-        deck = pdk.Deck(
-            map_style=None,                # Streamlit theme map
-            initial_view_state=view_state,
-            layers=[hex_layer],
-            tooltip=tooltip,
-        )
-
-        st.pydeck_chart(deck, width='stretch')
     elif data_option == "From State":
         # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
         need = ["origin_lat", "origin_lon", "foundStateAbb"]
@@ -410,60 +309,63 @@ if data_option:
             df.rename(columns={"origin_lat": "lat", "origin_lon": "lon"})
             .assign(state=df["foundStateAbb"])
         )
-
-        counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
-        dest_points = dest_points.merge(counts, on="state", how="left")
-
-        # -------------------------------------------------
-        # 2) Pick a reasonable initial view
-        # -------------------------------------------------
-        def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
-            lat = float(np.nanmean(d["lat"]))
-            lon = float(np.nanmean(d["lon"]))
-            return pdk.ViewState(latitude=lat, longitude=lon, zoom=4, pitch=40)
-
-        view_state = view_from_df(dest_points)
-
-        # -------------------------------------------------
-        # 3) Build layers (mirroring your example)
-        # -------------------------------------------------
-        hex_layer = pdk.Layer(
-            "HexagonLayer",
-            data=dest_points,
-            get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
-            radius=40000,                # ~40km hex
-            elevation_scale=100,
-            elevation_range=[0, 10000],
-            extruded=True,
-            pickable=True,
-            coverage=1.0,
-        )
-
-        # 4) Tooltip (state + count)
-        # -------------------------------------------------
-        tooltip = {
-            "html": """
-            <div style="font-family:system-ui;">
-            <b>State:</b> {foundStateAbb}<br/>
-            <b>Count:</b> {count}
-            </div>
-            """,
-            "style": {"backgroundColor": "white", "color": "black"},
-        }
-
-        # -------------------------------------------------
-        # 4) Deck and render
-        # -------------------------------------------------
-        deck = pdk.Deck(
-            map_style=None,                # Streamlit theme map
-            initial_view_state=view_state,
-            layers=[hex_layer],
-            tooltip=tooltip,
-        )
-
-        st.pydeck_chart(deck, width='stretch')
 else:
     st.write('No Item Selected')
+
+#____CREAT MAP_____
+counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
+dest_points = dest_points.merge(counts, on="state", how="left")
+
+# -------------------------------------------------
+# 2) Pick a reasonable initial view
+# -------------------------------------------------
+def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
+    lat = float(np.nanmean(d["lat"]))
+    lon = float(np.nanmean(d["lon"]))
+    return pdk.ViewState(latitude=lat, longitude=lon, zoom=4, pitch=40)
+
+view_state = view_from_df(dest_points)
+
+# -------------------------------------------------
+# 3) Build layers (mirroring your example)
+# -------------------------------------------------
+hex_layer = pdk.Layer(
+    "HexagonLayer",
+    data=dest_points,
+    get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
+    radius=40000,                # ~40km hex
+    elevation_scale=100,
+    elevation_range=[0, 10000],
+    extruded=True,
+    pickable=True,
+    coverage=1.0,
+)
+
+# 4) Tooltip (state + count)
+# -------------------------------------------------
+tooltip = {
+    "html": """
+    <div style="font-family:system-ui;">
+    <b>State:</b> {state}<br/>
+    <b>Count:</b> {count}
+    </div>
+    """,
+    "style": {"backgroundColor": "white", "color": "black"},
+}
+
+# -------------------------------------------------
+# 4) Deck and render
+# -------------------------------------------------
+deck = pdk.Deck(
+    map_style=None,                # Streamlit theme map
+    initial_view_state=view_state,
+    layers=[hex_layer],
+    tooltip=tooltip,
+)
+
+st.pydeck_chart(deck, width='stretch')
+
+
 # # -------------------------------------------------
 # # 1) Load / prepare your data
 # #    Replace this with however you load your DF
