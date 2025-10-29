@@ -247,7 +247,7 @@ chart = alt.layer(background, connections, points).configure_view(stroke=None).p
             "fontWeight": "bold"
         }
     )
-first_map.altair_chart(chart, width='stretch',height='stretch')
+first_map.altair_chart(chart, width='stretch')
 # st.write("selected:",sel)
 
 
@@ -401,7 +401,7 @@ if data_option:
         tooltip=tooltip,
     )
 
-    second_map.pydeck_chart(deck, width='stretch',height='stretch')
+    second_map.pydeck_chart(deck, width='stretch')
 else:
     st.write('Select Dog Movement Direction to Generate Visualizations')
 
