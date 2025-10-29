@@ -456,94 +456,94 @@ if data_option:
         st.pydeck_chart(deck, width='stretch')
 else:
     st.write('something is not selected')
-# -------------------------------------------------
-# 1) Load / prepare your data
-#    Replace this with however you load your DF
-# -------------------------------------------------
-# df = pd.read_csv("data/out_state_move.csv")  # example
-# For this snippet, assume you already have `df`
+# # -------------------------------------------------
+# # 1) Load / prepare your data
+# #    Replace this with however you load your DF
+# # -------------------------------------------------
+# # df = pd.read_csv("data/out_state_move.csv")  # example
+# # For this snippet, assume you already have `df`
 
-# Keep rows with full coordinates
-need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
-df = in_state_move.dropna(subset=need).copy()
+# # Keep rows with full coordinates
+# need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+# df = in_state_move.dropna(subset=need).copy()
 
-# HexagonLayer expects columns named "lat" and "lon".
-# We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
-dest_points = (
-    df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
-      .assign(state=df["contact_state"])
-)
-
-counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
-dest_points = dest_points.merge(counts, on="state", how="left")
-
-# -------------------------------------------------
-# 2) Pick a reasonable initial view
-# -------------------------------------------------
-def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
-    lat = float(np.nanmean(d["lat"]))
-    lon = float(np.nanmean(d["lon"]))
-    return pdk.ViewState(latitude=lat, longitude=lon, zoom=4, pitch=40)
-
-view_state = view_from_df(dest_points)
-
-# -------------------------------------------------
-# 3) Build layers (mirroring your example)
-# -------------------------------------------------
-hex_layer = pdk.Layer(
-    "HexagonLayer",
-    data=dest_points,
-    get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
-    radius=40000,                # ~40km hex
-    elevation_scale=100,
-    elevation_range=[0, 10000],
-    extruded=True,
-    pickable=True,
-    coverage=1.0,
-)
-
-# scatter_layer = pdk.Layer(
-#     "ScatterplotLayer",
-#     data=dest_points,            # show both origin and destination points
-#     get_position="[lon, lat]",
-#     get_fill_color="[200, 30, 0, 160]",  # you can color by kind if you want
-#     get_radius=20000,            # meters; adjust with zoom
-#     pickable=True,
+# # HexagonLayer expects columns named "lat" and "lon".
+# # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
+# dest_points = (
+#     df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
+#       .assign(state=df["contact_state"])
 # )
 
-# Optional: color origins and destinations differently
-# scatter_layer = pdk.Layer(
-#     "ScatterplotLayer",
-#     data=points_both,
-#     get_position="[lon, lat]",
-#     get_fill_color="(kind === 'Origin') ? [30, 150, 80, 180] : [200, 80, 60, 160]",
-#     get_radius=20000,
+# counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
+# dest_points = dest_points.merge(counts, on="state", how="left")
+
+# # -------------------------------------------------
+# # 2) Pick a reasonable initial view
+# # -------------------------------------------------
+# def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
+#     lat = float(np.nanmean(d["lat"]))
+#     lon = float(np.nanmean(d["lon"]))
+#     return pdk.ViewState(latitude=lat, longitude=lon, zoom=4, pitch=40)
+
+# view_state = view_from_df(dest_points)
+
+# # -------------------------------------------------
+# # 3) Build layers (mirroring your example)
+# # -------------------------------------------------
+# hex_layer = pdk.Layer(
+#     "HexagonLayer",
+#     data=dest_points,
+#     get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
+#     radius=40000,                # ~40km hex
+#     elevation_scale=100,
+#     elevation_range=[0, 10000],
+#     extruded=True,
 #     pickable=True,
+#     coverage=1.0,
 # )
 
+# # scatter_layer = pdk.Layer(
+# #     "ScatterplotLayer",
+# #     data=dest_points,            # show both origin and destination points
+# #     get_position="[lon, lat]",
+# #     get_fill_color="[200, 30, 0, 160]",  # you can color by kind if you want
+# #     get_radius=20000,            # meters; adjust with zoom
+# #     pickable=True,
+# # )
 
-# 4) Tooltip (state + count)
-# -------------------------------------------------
-tooltip = {
-    "html": """
-    <div style="font-family:system-ui;">
-      <b>State:</b> {contact_state}<br/>
-      <b>Count:</b> {count}
-    </div>
-    """,
-    "style": {"backgroundColor": "white", "color": "black"},
-}
+# # Optional: color origins and destinations differently
+# # scatter_layer = pdk.Layer(
+# #     "ScatterplotLayer",
+# #     data=points_both,
+# #     get_position="[lon, lat]",
+# #     get_fill_color="(kind === 'Origin') ? [30, 150, 80, 180] : [200, 80, 60, 160]",
+# #     get_radius=20000,
+# #     pickable=True,
+# # )
 
-# -------------------------------------------------
-# 4) Deck and render
-# -------------------------------------------------
-deck = pdk.Deck(
-    map_style=None,                # Streamlit theme map
-    initial_view_state=view_state,
-    layers=[hex_layer],
-    tooltip=tooltip,
-)
 
-st.pydeck_chart(deck, width='stretch')
+# # 4) Tooltip (state + count)
+# # -------------------------------------------------
+# tooltip = {
+#     "html": """
+#     <div style="font-family:system-ui;">
+#       <b>State:</b> {contact_state}<br/>
+#       <b>Count:</b> {count}
+#     </div>
+#     """,
+#     "style": {"backgroundColor": "white", "color": "black"},
+# }
+
+# # -------------------------------------------------
+# # 4) Deck and render
+# # -------------------------------------------------
+# deck = pdk.Deck(
+#     map_style=None,                # Streamlit theme map
+#     initial_view_state=view_state,
+#     layers=[hex_layer],
+#     tooltip=tooltip,
+# )
+
+# st.pydeck_chart(deck, width='stretch')
 
 # st.dataframe(dest_points)
