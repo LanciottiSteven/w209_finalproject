@@ -11,7 +11,7 @@ import pydeck as pdk
 
 
 
-st.title("W209 Final Project - Mid Term Presentation")
+st.title("W209 Final Project - Version 1")
 st.header(
     "Dog Movements Across the United States",
     divider="gray"
