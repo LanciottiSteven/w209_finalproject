@@ -401,16 +401,51 @@ if data_option:
         tooltip=tooltip,
     )
 
-    second_map.pydeck_chart(deck)
+    second_map.pydeck_chart(deck, width='stretch')
 else:
     st.write('Select Dog Movement Direction to Generate Visualizations')
+
+
+first_scatter = st.empty()
+if data_option:
+    if data_option == "To State":
+        scatter = alt.Chart(filtered_df).mark_point().encode(
+            x='count():Q',
+            y='contact_state:N',
+            color='age:N',
+            tooltip=['contact_state:N', 'count():Q', 'age:N']
+        ).properties(
+            title={
+                "text": "Age of Dog",
+                "anchor": "middle",   
+                "fontSize": 20,
+                "fontWeight": "bold"
+            }
+        )
+        first_scatter.altair_chart(scatter, width='stretch',height='stretch')
+    else:
+        scatter = alt.Chart(filtered_df).mark_point().encode(
+            x='count():Q',
+            y='FoundState:N',
+            color='age:N',
+            tooltip=['FoundState:N', 'count():Q', 'age:N']
+        ).properties(
+            title={
+                "text": "Age of Dogs",
+                "anchor": "middle",   
+                "fontSize": 20,
+                "fontWeight": "bold"
+            }
+        )
+        first_scatter.altair_chart(scatter, width='stretch',height='stretch')
+
 
 first_hex = st.empty()
 #____Hex Chart_____
 if data_option:
     if data_option == "To State":
         # Size of the hexbins
-        size = 10
+        size = 5
         # Count of distinct x features
         xFeaturesCount = len(filtered_df['contact_state'].unique())
         # Count of distinct y features
@@ -440,11 +475,18 @@ if data_option:
             height=size * yFeaturesCount * 1.7320508076,  # 1.7320508076 is approx. sin(60°)*2
         ).configure_view(
             strokeWidth=0
+        ).properties(
+            title={
+                "text": "Breed of Dogs",
+                "anchor": "middle",   
+                "fontSize": 20,
+                "fontWeight": "bold"
+            }
         )
-        first_hex.altair_chart(hex_chart, height='stretch')
+        first_hex.altair_chart(hex_chart, width='stretch', height='stretch')
     else:
         # Size of the hexbins
-        size = 10
+        size = 5
         # Count of distinct x features
         xFeaturesCount = len(filtered_df['FoundState'].unique())
         # Count of distinct y features
@@ -474,29 +516,15 @@ if data_option:
             height=size * yFeaturesCount * 1.7320508076,  # 1.7320508076 is approx. sin(60°)*2
         ).configure_view(
             strokeWidth=0
+        ).properties(
+            title={
+                "text": "Breed of Dogs",
+                "anchor": "middle",   
+                "fontSize": 20,
+                "fontWeight": "bold"
+            }
         )
-        first_hex.altair_chart(hex_chart,height='stretch')
-
-first_scatter = st.empty()
-if data_option:
-    if data_option == "To State":
-        scatter = alt.Chart(filtered_df).mark_point().encode(
-            x='count():Q',
-            y='contact_state:N',
-            color='age:N',
-            tooltip=['contact_state:N', 'count():Q', 'age:N']
-        )
-        first_scatter.altair_chart(scatter, width='stretch',height='stretch')
-    else:
-        scatter = alt.Chart(filtered_df).mark_point().encode(
-            x='count():Q',
-            y='FoundState:N',
-            color='age:N',
-            tooltip=['FoundState:N', 'count():Q', 'age:N']
-        )
-        first_scatter.altair_chart(scatter, width='stretch',height='stretch')
-
-
+        first_hex.altair_chart(hex_chart, width='stretch',height='stretch')
 
 
 
