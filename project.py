@@ -249,27 +249,31 @@ st.altair_chart(chart, width='stretch')
 # st.write("selected:",sel)
 
 
-st.title("Dog Movement — Hex Bins by Destination State")
+st.title("Dog Movement — Hex Bins + Points (pydeck)")
 
 # -------------------------------------------------
-# 1) Data prep
+# 1) Load / prepare your data
+#    Replace this with however you load your DF
 # -------------------------------------------------
-# Assume df is already loaded with your columns
+# df = pd.read_csv("data/out_state_move.csv")  # example
+# For this snippet, assume you already have `df`
+
+# Keep rows with full coordinates
 need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
-df = df.dropna(subset=need).copy()
+df = in_state_move.dropna(subset=need).copy()
 
-# --- Create destinations dataset for hex layer ---
+# HexagonLayer expects columns named "lat" and "lon".
+# We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
 dest_points = (
     df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
       .assign(state=df["contact_state"])
 )
 
-# Count how many dogs go to each destination state
 counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
 dest_points = dest_points.merge(counts, on="state", how="left")
 
 # -------------------------------------------------
-# 2) Define map view
+# 2) Pick a reasonable initial view
 # -------------------------------------------------
 def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
     lat = float(np.nanmean(d["lat"]))
@@ -279,21 +283,40 @@ def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
 view_state = view_from_df(dest_points)
 
 # -------------------------------------------------
-# 3) Hexagon layer only
+# 3) Build layers (mirroring your example)
 # -------------------------------------------------
 hex_layer = pdk.Layer(
     "HexagonLayer",
     data=dest_points,
-    get_position="[lon, lat]",
-    radius=40000,                 # Adjust for coarser/finer bins
-    elevation_scale=10,
-    elevation_range=[0, 4000],
+    get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
+    radius=40000,                # ~40km hex
+    elevation_scale=100,
+    elevation_range=[0, 10000],
     extruded=True,
     pickable=True,
     coverage=1.0,
 )
 
-# -------------------------------------------------
+# scatter_layer = pdk.Layer(
+#     "ScatterplotLayer",
+#     data=dest_points,            # show both origin and destination points
+#     get_position="[lon, lat]",
+#     get_fill_color="[200, 30, 0, 160]",  # you can color by kind if you want
+#     get_radius=20000,            # meters; adjust with zoom
+#     pickable=True,
+# )
+
+# Optional: color origins and destinations differently
+# scatter_layer = pdk.Layer(
+#     "ScatterplotLayer",
+#     data=points_both,
+#     get_position="[lon, lat]",
+#     get_fill_color="(kind === 'Origin') ? [30, 150, 80, 180] : [200, 80, 60, 160]",
+#     get_radius=20000,
+#     pickable=True,
+# )
+
+
 # 4) Tooltip (state + count)
 # -------------------------------------------------
 tooltip = {
@@ -307,7 +330,7 @@ tooltip = {
 }
 
 # -------------------------------------------------
-# 5) Build and show map
+# 4) Deck and render
 # -------------------------------------------------
 deck = pdk.Deck(
     map_style=None,                # Streamlit theme map
