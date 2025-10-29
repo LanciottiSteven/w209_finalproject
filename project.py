@@ -285,6 +285,7 @@ if data_option:
                 .assign(state=df["contact_state"])
             )
         else:
+            filtered_df = in_state_move.copy()
             need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
             df = in_state_move.dropna(subset=need).copy()
 
@@ -309,8 +310,9 @@ if data_option:
             )
         else:
             # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+            filtered_df = out_state_move.copy()
             need = ["dest_lat", "dest_lon", "contact_state"]
-            df = out_state_move.dropna(subset=need).copy()
+            df = filtered_df.dropna(subset=need).copy()
 
             # HexagonLayer expects columns named "lat" and "lon".
             # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
@@ -330,8 +332,9 @@ if data_option:
             )
         else:    
             # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+            filtered_df = out_state_move.copy()
             need = ["origin_lat", "origin_lon", "foundStateAbb"]
-            df = out_state_move.dropna(subset=need).copy()
+            df = filtered_df.dropna(subset=need).copy()
 
             # HexagonLayer expects columns named "lat" and "lon".
             # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
