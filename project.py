@@ -162,21 +162,21 @@ background = (
 )
 
 # --- Add state labels ---
-# state_centroids = alt.topo_feature(data.us_10m.url, feature="state-capitals")
+state_centroids = alt.topo_feature(data.us_10m.url, feature="state-capitals")
 
-# state_labels = (
-#     alt.Chart(state_centroids)
-#     .mark_text(
-#         fontSize=9,
-#         fontWeight="bold",
-#         color="dimgray"
-#     )
-#     .encode(
-#         longitude="lon:Q",
-#         latitude="lat:Q",
-#         text="name:N"
-#     )
-# )
+state_labels = (
+    alt.Chart(state_centroids)
+    .mark_text(
+        fontSize=9,
+        fontWeight="bold",
+        color="dimgray"
+    )
+    .encode(
+        longitude="lon:Q",
+        latitude="lat:Q",
+        text="name:N"
+    )
+)
 
 # --- Aggregate bubbles (one row per origin) ---
 origins = (
@@ -235,7 +235,7 @@ points = (
     .add_params(sel)   # attach the selection ONCE (to the points layer)
 )
 
-chart = alt.layer(background,  connections, points).configure_view(stroke=None).properties(
+chart = alt.layer(background, state_labels, connections, points).configure_view(stroke=None).properties(
         title={
             "text": "Out-of-State Dog Movement Across the U.S.",
             "anchor": "middle",   
