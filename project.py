@@ -291,8 +291,8 @@ hex_layer = pdk.Layer(
     "HexagonLayer",
     data=dest_points,
     get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
-    radius=10000,                # ~40km hex; tweak to taste
-    elevation_scale=10,
+    radius=40000,                # ~40km hex; tweak to taste
+    elevation_scale=100,
     elevation_range=[0, 10000],
     extruded=True,
     pickable=True,
