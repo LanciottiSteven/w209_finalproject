@@ -445,7 +445,7 @@ first_hex = st.empty()
 if data_option:
     if data_option == "To State":
         # Size of the hexbins
-        size = 20
+        size = 10
         # Count of distinct x features
         xFeaturesCount = len(filtered_df['contact_state'].unique())
         # Count of distinct y features
@@ -520,7 +520,7 @@ if data_option:
         first_hex.altair_chart(hex_chart, width='stretch', height='stretch')
     else:
         # Size of the hexbins
-        size = 20
+        size = 10
         # Count of distinct x features
         xFeaturesCount = len(filtered_df['FoundState'].unique())
         # Count of distinct y features
