@@ -475,7 +475,7 @@ if data_option:
         ).configure_view(
             strokeWidth=0
         )
-        first_hex.altair_chart(hex_chart, width='stretch')
+        first_hex.altair_chart(hex_chart, width='stretch',height=600)
 
 
 
