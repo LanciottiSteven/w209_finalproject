@@ -264,6 +264,10 @@ option = colA.selectbox(
 )
 st.write("You selected:", option)
 
+if option:
+    st.write('something is selected')
+else:
+    st.write('something is not selected')
 # -------------------------------------------------
 # 1) Load / prepare your data
 #    Replace this with however you load your DF
