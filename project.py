@@ -218,5 +218,12 @@ points = (
     .add_params(sel)   # attach the selection ONCE (to the points layer)
 )
 
-chart = alt.layer(background, connections, points).configure_view(stroke=None)
+chart = alt.layer(background, connections, points).configure_view(stroke=None).properties(
+        title={
+            "text": "Out-of-State Dog Movement Across the U.S.",
+            "anchor": "middle",   
+            "fontSize": 20,
+            "fontWeight": "bold"
+        }
+    )
 st.altair_chart(chart, use_container_width=True)
