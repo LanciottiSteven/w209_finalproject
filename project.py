@@ -249,33 +249,86 @@ st.altair_chart(chart, width='stretch')
 # st.write("selected:",sel)
 
 
-st.pydeck_chart(
-    pdk.Deck(
-        map_style=None,  # Use Streamlit theme to pick map style
-        initial_view_state=pdk.ViewState(
-            latitude=37.76,
-            longitude=-122.4,
-            zoom=11,
-            pitch=50,
-        ),
-        layers=[
-            pdk.Layer(
-                "HexagonLayer",
-                data=in_state_move,
-                get_position="[origin_lon, origin_lat]",
-                radius=200,
-                elevation_scale=4,
-                elevation_range=[0, 1000],
-                pickable=True,
-                extruded=True,
-            ),
-            pdk.Layer(
-                "ScatterplotLayer",
-                data=in_state_move,
-                get_position="[origin_lon, origin_lat]",
-                get_color="[200, 30, 0, 160]",
-                get_radius=200,
-            ),
-        ],
-    )
+st.title("Dog Movement — Hex Bins + Points (pydeck)")
+
+# -------------------------------------------------
+# 1) Load / prepare your data
+#    Replace this with however you load your DF
+# -------------------------------------------------
+# df = pd.read_csv("data/out_state_move.csv")  # example
+# For this snippet, assume you already have `df`
+
+# Keep rows with full coordinates
+need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon"]
+df = in_state_move.dropna(subset=need).copy()
+
+# HexagonLayer expects columns named "lat" and "lon".
+# We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
+dest_points = df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})[["lat", "lon"]]
+
+# Optional: a single points dataframe (both origin + destination)
+points_both = pd.concat([
+    df[["origin_lat", "origin_lon"]].rename(columns={"origin_lat": "lat", "origin_lon": "lon"}).assign(kind="Origin"),
+    df[["dest_lat", "dest_lon"]].rename(columns={"dest_lat": "lat", "dest_lon": "lon"}).assign(kind="Destination"),
+], ignore_index=True)
+
+# -------------------------------------------------
+# 2) Pick a reasonable initial view
+# -------------------------------------------------
+def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
+    if d.empty:
+        return pdk.ViewState(latitude=39.5, longitude=-98.35, zoom=3.5, pitch=40)  # CONUS
+    lat = float(np.nanmean(d["lat"]))
+    lon = float(np.nanmean(d["lon"]))
+    return pdk.ViewState(latitude=lat, longitude=lon, zoom=4, pitch=40)
+
+view_state = view_from_df(dest_points)
+
+# -------------------------------------------------
+# 3) Build layers (mirroring your example)
+# -------------------------------------------------
+hex_layer = pdk.Layer(
+    "HexagonLayer",
+    data=dest_points,
+    get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
+    radius=40000,                # ~40km hex; tweak to taste
+    elevation_scale=10,
+    elevation_range=[0, 4000],
+    extruded=True,
+    pickable=True,
+    coverage=1.0,
 )
+
+scatter_layer = pdk.Layer(
+    "ScatterplotLayer",
+    data=points_both,            # show both origin and destination points
+    get_position="[lon, lat]",
+    get_fill_color="[200, 30, 0, 160]",  # you can color by kind if you want
+    get_radius=20000,            # meters; adjust with zoom
+    pickable=True,
+)
+
+# Optional: color origins and destinations differently
+# scatter_layer = pdk.Layer(
+#     "ScatterplotLayer",
+#     data=points_both,
+#     get_position="[lon, lat]",
+#     get_fill_color="(kind === 'Origin') ? [30, 150, 80, 180] : [200, 80, 60, 160]",
+#     get_radius=20000,
+#     pickable=True,
+# )
+
+# -------------------------------------------------
+# 4) Deck and render
+# -------------------------------------------------
+deck = pdk.Deck(
+    map_style=None,  # Let Streamlit theme decide; avoids needing a Mapbox token
+    initial_view_state=view_state,
+    layers=[hex_layer, scatter_layer],
+    tooltip={
+        "html": "<b>lat:</b> {lat}<br/><b>lon:</b> {lon}",
+        "style": {"backgroundColor": "white", "color": "black"}
+    }
+)
+
+st.pydeck_chart(deck, width='stretch')
