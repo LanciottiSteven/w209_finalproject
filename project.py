@@ -227,3 +227,4 @@ chart = alt.layer(background, connections, points).configure_view(stroke=None).p
         }
     )
 st.altair_chart(chart, use_container_width=True)
+st.write("selected:",sel)
