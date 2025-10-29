@@ -152,6 +152,9 @@ merged_df = pd.merge(clean_dog_travel_df,k_dog_desc_subset, on='id')
 in_state_move = merged_df[merged_df['contact_state'] == merged_df['foundStateAbb']]
 out_state_move = merged_df[merged_df['contact_state'] != merged_df['foundStateAbb']]
 
+first_map = st.empty()
+second_map = st.empty()
+first_hex = st.empty()
 
 # Build the First Map***********************************
 # --- Background map ---
@@ -245,7 +248,7 @@ chart = alt.layer(background, connections, points).configure_view(stroke=None).p
             "fontWeight": "bold"
         }
     )
-st.altair_chart(chart, width='stretch')
+first_map.altair_chart(chart, width='stretch')
 # st.write("selected:",sel)
 
 
@@ -398,7 +401,7 @@ if data_option:
         tooltip=tooltip,
     )
 
-    st.pydeck_chart(deck, width='stretch')
+    second_map.pydeck_chart(deck, width='stretch')
 else:
     st.write('Select Dog Movement Direction to Generate Visualizations')
 
@@ -437,7 +440,7 @@ if data_option:
         ).configure_view(
             strokeWidth=0
         )
-        st.altair_chart(hex_chart, width='stretch')
+        first_hex.altair_chart(hex_chart, width='stretch')
     else:
         # Size of the hexbins
         size = 10
@@ -471,7 +474,7 @@ if data_option:
         ).configure_view(
             strokeWidth=0
         )
-        st.altair_chart(hex_chart, width='stretch')
+        first_hex.altair_chart(hex_chart, width='stretch')
 
 
 
