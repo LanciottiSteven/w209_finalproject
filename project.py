@@ -254,7 +254,7 @@ st.header(
     divider="blue"
 )
 
-colA, colB, colC = st.columns([1, 1, 1])
+colA, colB = st.columns([1, 1])
 
 data_option = colA.selectbox(
     "Dog Movement Direction",
@@ -276,16 +276,24 @@ breed_option = colB.multiselect(
 if data_option:
     # st.write('something is selected')
     if data_option == "Within State":
-        # if 
-        need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
-        df = in_state_move.dropna(subset=need).copy()
+        if breed_option:
+            filtered_df = in_state_move[in_state_move['breed_primary'].isin(breed_option)]
+            need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+            df = filtered_df.dropna(subset=need).copy()
+            dest_points = (
+                df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
+                .assign(state=df["contact_state"])
+            )
+        else:
+            need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+            df = in_state_move.dropna(subset=need).copy()
 
-        # HexagonLayer expects columns named "lat" and "lon".
-        # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
-        dest_points = (
-            df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
-            .assign(state=df["contact_state"])
-        )
+            # HexagonLayer expects columns named "lat" and "lon".
+            # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
+            dest_points = (
+                df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
+                .assign(state=df["contact_state"])
+            )
 
         
     elif data_option == "To State":
