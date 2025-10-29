@@ -264,10 +264,11 @@ data_option = colA.selectbox(
 )
 # st.write("You selected:", data_option)
 
-breed_option = colB.selectbox(
+breed_option = colB.multiselect(
     "Dog Breed",
     (merged_df['breed_primary'].unique()),
-    index=None,
+    max_selections=10,
+    accept_new_options=True,
     placeholder="Select Breed...",
 )
 
@@ -275,6 +276,7 @@ breed_option = colB.selectbox(
 if data_option:
     # st.write('something is selected')
     if data_option == "Within State":
+        # if 
         need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
         df = in_state_move.dropna(subset=need).copy()
 
@@ -311,6 +313,16 @@ if data_option:
         )
 else:
     st.write('No Item Selected')
+
+
+
+
+
+
+
+
+
+
 
 #____CREAT MAP_____
 counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
@@ -364,6 +376,16 @@ deck = pdk.Deck(
 )
 
 st.pydeck_chart(deck, width='stretch')
+
+
+
+
+
+
+
+
+
+
 
 
 # # -------------------------------------------------
