@@ -262,7 +262,15 @@ data_option = colA.selectbox(
     index=None,
     placeholder="Select direction...",
 )
-st.write("You selected:", data_option)
+# st.write("You selected:", data_option)
+
+breed_option = colB.selectbox(
+    "Dog Breed",
+    (merged_df['breed_primary'].unique()),
+    index=None,
+    placeholder="Select Breed...",
+)
+
 
 if data_option:
     # st.write('something is selected')
@@ -455,7 +463,7 @@ if data_option:
 
         st.pydeck_chart(deck, width='stretch')
 else:
-    st.write('something is not selected')
+    st.write('No Item Selected')
 # # -------------------------------------------------
 # # 1) Load / prepare your data
 # #    Replace this with however you load your DF
