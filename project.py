@@ -7,6 +7,8 @@ import json, urllib.request
 import time
 import os
 from vega_datasets import data
+import pydeck as pdk
+
 
 
 st.title("W209 Final Project - Mid Term Presentation")
@@ -245,3 +247,35 @@ chart = alt.layer(background, connections, points).configure_view(stroke=None).p
     )
 st.altair_chart(chart, width='stretch')
 # st.write("selected:",sel)
+
+
+st.pydeck_chart(
+    pdk.Deck(
+        map_style=None,  # Use Streamlit theme to pick map style
+        initial_view_state=pdk.ViewState(
+            latitude=37.76,
+            longitude=-122.4,
+            zoom=11,
+            pitch=50,
+        ),
+        layers=[
+            pdk.Layer(
+                "HexagonLayer",
+                data=in_state_move,
+                get_position="[origin_lon, origin_lat]",
+                radius=200,
+                elevation_scale=4,
+                elevation_range=[0, 1000],
+                pickable=True,
+                extruded=True,
+            ),
+            pdk.Layer(
+                "ScatterplotLayer",
+                data=in_state_move,
+                get_position="[origin_lon, origin_lat]",
+                get_color="[200, 30, 0, 160]",
+                get_radius=200,
+            ),
+        ],
+    )
+)
