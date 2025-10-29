@@ -492,7 +492,7 @@ if data_option:
 
 
 
-        hex_chart = alt.Chart(filtered_df).mark_point(size=size**2, shape=dog_side_path).encode(
+        hex_chart = alt.Chart(filtered_df).mark_point(size=size**2, shape=dog_head_path).encode(
             alt.X('contact_state:N')
                 .title('State')
                 .axis(grid=False, tickOpacity=0, domainOpacity=0),
@@ -565,7 +565,7 @@ if data_option:
             "C-1.2,0.25 -1.2,0.05 -1.4,-0.15 Z"
         )
 
-        hex_chart = alt.Chart(filtered_df).mark_point(size=size**2, shape=dog_side_path).encode(
+        hex_chart = alt.Chart(filtered_df).mark_point(size=size**2, shape=dog_head_path).encode(
             alt.X('FoundState:N')
                 .title('State')
                 .axis(grid=False, tickOpacity=0, domainOpacity=0),
