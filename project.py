@@ -340,3 +340,5 @@ deck = pdk.Deck(
 )
 
 st.pydeck_chart(deck, width='stretch')
+
+st.dataframe(dest_points)
