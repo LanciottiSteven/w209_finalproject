@@ -258,18 +258,202 @@ colA, colB, colC = st.columns([1, 1, 1])
 
 data_option = colA.selectbox(
     "Dog Movement Direction",
-    ("Within State", "Out of State", "Into State"),
+    ("Within State", "To State", "From State"),
     index=None,
     placeholder="Select direction...",
 )
 st.write("You selected:", data_option)
 
 if data_option:
-    st.write('something is selected')
+    # st.write('something is selected')
     if data_option == "Within State":
-        st.write('it worked')
-    else:
-        st.write('it didnt work')
+        need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+        df = in_state_move.dropna(subset=need).copy()
+
+        # HexagonLayer expects columns named "lat" and "lon".
+        # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
+        dest_points = (
+            df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
+            .assign(state=df["contact_state"])
+        )
+
+        counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
+        dest_points = dest_points.merge(counts, on="state", how="left")
+
+        # -------------------------------------------------
+        # 2) Pick a reasonable initial view
+        # -------------------------------------------------
+        def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
+            lat = float(np.nanmean(d["lat"]))
+            lon = float(np.nanmean(d["lon"]))
+            return pdk.ViewState(latitude=lat, longitude=lon, zoom=4, pitch=40)
+
+        view_state = view_from_df(dest_points)
+
+        # -------------------------------------------------
+        # 3) Build layers (mirroring your example)
+        # -------------------------------------------------
+        hex_layer = pdk.Layer(
+            "HexagonLayer",
+            data=dest_points,
+            get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
+            radius=40000,                # ~40km hex
+            elevation_scale=100,
+            elevation_range=[0, 10000],
+            extruded=True,
+            pickable=True,
+            coverage=1.0,
+        )
+
+        # 4) Tooltip (state + count)
+        # -------------------------------------------------
+        tooltip = {
+            "html": """
+            <div style="font-family:system-ui;">
+            <b>State:</b> {contact_state}<br/>
+            <b>Count:</b> {count}
+            </div>
+            """,
+            "style": {"backgroundColor": "white", "color": "black"},
+        }
+
+        # -------------------------------------------------
+        # 4) Deck and render
+        # -------------------------------------------------
+        deck = pdk.Deck(
+            map_style=None,                # Streamlit theme map
+            initial_view_state=view_state,
+            layers=[hex_layer],
+            tooltip=tooltip,
+        )
+
+        st.pydeck_chart(deck, width='stretch')
+    elif data_option == "To State":
+        # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+        need = ["dest_lat", "dest_lon", "contact_state"]
+        df = out_state_move.dropna(subset=need).copy()
+
+        # HexagonLayer expects columns named "lat" and "lon".
+        # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
+        dest_points = (
+            df.rename(columns={"dest_lat": "lat", "dest_lon": "lon"})
+            .assign(state=df["contact_state"])
+        )
+
+        counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
+        dest_points = dest_points.merge(counts, on="state", how="left")
+
+        # -------------------------------------------------
+        # 2) Pick a reasonable initial view
+        # -------------------------------------------------
+        def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
+            lat = float(np.nanmean(d["lat"]))
+            lon = float(np.nanmean(d["lon"]))
+            return pdk.ViewState(latitude=lat, longitude=lon, zoom=4, pitch=40)
+
+        view_state = view_from_df(dest_points)
+
+        # -------------------------------------------------
+        # 3) Build layers (mirroring your example)
+        # -------------------------------------------------
+        hex_layer = pdk.Layer(
+            "HexagonLayer",
+            data=dest_points,
+            get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
+            radius=40000,                # ~40km hex
+            elevation_scale=100,
+            elevation_range=[0, 10000],
+            extruded=True,
+            pickable=True,
+            coverage=1.0,
+        )
+
+        # 4) Tooltip (state + count)
+        # -------------------------------------------------
+        tooltip = {
+            "html": """
+            <div style="font-family:system-ui;">
+            <b>State:</b> {contact_state}<br/>
+            <b>Count:</b> {count}
+            </div>
+            """,
+            "style": {"backgroundColor": "white", "color": "black"},
+        }
+
+        # -------------------------------------------------
+        # 4) Deck and render
+        # -------------------------------------------------
+        deck = pdk.Deck(
+            map_style=None,                # Streamlit theme map
+            initial_view_state=view_state,
+            layers=[hex_layer],
+            tooltip=tooltip,
+        )
+
+        st.pydeck_chart(deck, width='stretch')
+    elif data_option == "From State":
+        # need = ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "contact_state"]
+        need = ["origin_lat", "origin_lon", "foundStateAbb"]
+        df = out_state_move.dropna(subset=need).copy()
+
+        # HexagonLayer expects columns named "lat" and "lon".
+        # We'll show DESTINATIONS in the hex layer (switch to origin if you prefer)
+        dest_points = (
+            df.rename(columns={"origin_lat": "lat", "origin_lon": "lon"})
+            .assign(state=df["foundStateAbb"])
+        )
+
+        counts = dest_points.groupby("state", as_index=False).size().rename(columns={"size": "count"})
+        dest_points = dest_points.merge(counts, on="state", how="left")
+
+        # -------------------------------------------------
+        # 2) Pick a reasonable initial view
+        # -------------------------------------------------
+        def view_from_df(d: pd.DataFrame) -> pdk.ViewState:
+            lat = float(np.nanmean(d["lat"]))
+            lon = float(np.nanmean(d["lon"]))
+            return pdk.ViewState(latitude=lat, longitude=lon, zoom=4, pitch=40)
+
+        view_state = view_from_df(dest_points)
+
+        # -------------------------------------------------
+        # 3) Build layers (mirroring your example)
+        # -------------------------------------------------
+        hex_layer = pdk.Layer(
+            "HexagonLayer",
+            data=dest_points,
+            get_position="[lon, lat]",   # IMPORTANT: [lon, lat] (notice order)
+            radius=40000,                # ~40km hex
+            elevation_scale=100,
+            elevation_range=[0, 10000],
+            extruded=True,
+            pickable=True,
+            coverage=1.0,
+        )
+
+        # 4) Tooltip (state + count)
+        # -------------------------------------------------
+        tooltip = {
+            "html": """
+            <div style="font-family:system-ui;">
+            <b>State:</b> {foundStateAbb}<br/>
+            <b>Count:</b> {count}
+            </div>
+            """,
+            "style": {"backgroundColor": "white", "color": "black"},
+        }
+
+        # -------------------------------------------------
+        # 4) Deck and render
+        # -------------------------------------------------
+        deck = pdk.Deck(
+            map_style=None,                # Streamlit theme map
+            initial_view_state=view_state,
+            layers=[hex_layer],
+            tooltip=tooltip,
+        )
+
+        st.pydeck_chart(deck, width='stretch')
 else:
     st.write('something is not selected')
 # -------------------------------------------------
