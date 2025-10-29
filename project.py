@@ -247,7 +247,7 @@ chart = alt.layer(background, connections, points).configure_view(stroke=None).p
             "fontWeight": "bold"
         }
     )
-first_map.altair_chart(chart, width='stretch')
+first_map.altair_chart(chart, width='stretch',height='stretch')
 # st.write("selected:",sel)
 
 
@@ -401,7 +401,7 @@ if data_option:
         tooltip=tooltip,
     )
 
-    second_map.pydeck_chart(deck, width='stretch')
+    second_map.pydeck_chart(deck, width='stretch',height='stretch')
 else:
     st.write('Select Dog Movement Direction to Generate Visualizations')
 
@@ -441,7 +441,7 @@ if data_option:
         ).configure_view(
             strokeWidth=0
         )
-        first_hex.altair_chart(hex_chart, width='stretch')
+        first_hex.altair_chart(hex_chart, width='stretch', height='stretch')
     else:
         # Size of the hexbins
         size = 10
@@ -477,7 +477,24 @@ if data_option:
         )
         first_hex.altair_chart(hex_chart, width='stretch',height='stretch')
 
-
+first_scatter = st.empty()
+if data_option:
+    if data_option == "To State":
+        scatter = alt.Chart(filtered_df).mark_point().encode(
+            x='count():Q',
+            y='contact_state:N',
+            color='age:N',
+            tooltip=['contact_state:N', 'count():Q', 'age:N']
+        )
+        first_scatter.altair_chart(scatter, width='stretch',height='stretch')
+    else:
+        scatter = alt.Chart(filtered_df).mark_point().encode(
+            x='count():Q',
+            y='FoundState:N',
+            color='age:N',
+            tooltip=['FoundState:N', 'count():Q', 'age:N']
+        )
+        first_scatter.altair_chart(scatter, width='stretch',height='stretch')
 
 
 
