@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <meta name="description" content="" />
+    <meta name="author" content="Bootstrap contributors + you" />
+    <title>Dog Movement Analysis</title>
+
+    <!-- Bootstrap CSS via CDN -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+
+    <!-- Your custom CSS -->
+    <link
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+      rel="stylesheet"
+    />
+
+    <meta name="theme-color" content="#712cf9" />
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+      .b-example-divider {
+        width: 100%;
+        height: 3rem;
+        background-color: #0000001a;
+        border: solid rgba(0, 0, 0, 0.15);
+        border-width: 1px 0;
+        box-shadow:
+          inset 0 0.5em 1.5em #0000001a,
+          inset 0 0.125em 0.5em #00000026;
+      }
+
+      .b-example-vr {
+        flex-shrink: 0;
+        width: 1.5rem;
+        height: 100vh;
+      }
+
+      .bi {
+        vertical-align: -0.125em;
+        fill: currentColor;
+      }
+
+      .nav-scroller {
+        position: relative;
+        z-index: 2;
+        height: 2.75rem;
+        overflow-y: hidden;
+      }
+
+      .nav-scroller .nav {
+        display: flex;
+        flex-wrap: nowrap;
+        padding-bottom: 1rem;
+        margin-top: -1px;
+        overflow-x: auto;
+        text-align: center;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* --- Layout & banners for viz sections --- */
+      main {
+        padding-top: 1.5rem;
+        padding-bottom: 3rem;
+      }
+
+      .viz-section {
+        padding: 1.75rem 0 2.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+      }
+
+      .viz-section:last-of-type {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .section-banner {
+        background: #f8fafc;
+        border-left: 4px solid #0d6efd;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .section-banner h2 {
+        font-size: 1.4rem;
+        margin: 0 0 0.25rem;
+      }
+
+      .section-banner p {
+        margin: 0;
+        color: #4b5563;
+        font-size: 0.95rem;
+      }
+
+      .section-title {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 1.15rem;
+        font-weight: 600;
+      }
+
+      .chart-subtitle {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+      }
+
+      .section-divider {
+        margin: 2rem 0;
+        border-color: #e5e7eb;
+      }
+
+      /* --- Observable layout helpers --- */
+      .observable-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.75rem;
+        background: #f9fafb;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+      }
+
+      .observable-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 1.75rem;
+      }
+
+      .observable-panel {
+        flex: 1 1 0;
+        min-width: 340px;
+        background: #ffffff;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        padding: 1rem 1.25rem 1.25rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+      }
+
+      .observable-panel > div[id^="observablehq-"] {
+        /* give charts a bit of breathing room from the panel edges */
+        margin-top: 0.25rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Simple dark navbar -->
+    <header
+      class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow"
+      data-bs-theme="dark"
+    >
+      <a
+        class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white"
+        href="{{ url_for('home') }}"
+      >
+        Dog Movement Analysis
+      </a>
+      <div class="navbar-nav">
+        <div class="nav-item text-nowrap">
+          <span class="nav-link px-3 text-white">Welcome Dog Lovers</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <nav
+          id="sidebarMenu"
+          class="col-md-3 col-lg-2 d-md-block bg-body-tertiary sidebar collapse"
+        >
+          <div class="position-sticky pt-3 sidebar-sticky">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <p class="px-3 small text-muted">
+                  Explore how dogs move between states and shelters using the following dashboards.
+                </p>
+                <a
+                  class="nav-link {% if active_page == 'state' %}active{% endif %}"
+                  aria-current="page"
+                  href="{{ url_for('state_dashboard') }}"
+                >
+                  State Representative Dashboard
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link {% if active_page == 'shelter' %}active{% endif %}"
+                  href="{{ url_for('shelter_dashboard') }}"
+                >
+                  Animal Shelter Dashboard
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div
+            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+          >
+            <h1 class="h2 mb-0">State Representative Dashboard</h1>
+          </div>
+          
+          <!-- Floating state-level controls -->
+  <div class="floating-controls">
+    <h5 class="mb-3">State Filters</h5>
+    <div id="observablehq-viewof-flowMode-6a33d79e"></div>
+    <div id="observablehq-viewof-state-6a33d79e"></div>
+  </div>
+
+          <!-- High-level intro / instructions -->
+          <section class="viz-section">
+            <div class="page-header">
+              <h2>Overview</h2>
+              <p>
+                Use the controls below to explore how dogs move into, out of, and within each state.
+                Compare partner networks, demographic patterns, and in-state organization activity.
+              </p>
+            </div>
+
+            <p class="lead">
+              Analyze dog movement across states to understand adoption inflows,
+              outflows, and regional transport patterns.
+            </p>
+
+            <div
+              id="state-chart"
+              class="d-flex justify-content-left align-items-center mb-4"
+              style="height: 50px;"
+            >
+              <span class="text-muted small">
+                Tip: Start by selecting a state and flow direction below to drive all visuals.
+              </span>
+            </div>
+          </section>
+
+          <!-- State-level controls + maps -->
+          <section class="viz-section">
+            <div class="section-banner">
+              <h2>State-Level Flows</h2>
+              <p>
+                Choose a state and whether you want to see dogs moving into or out of that state.
+                The flow map and partner network update together.
+              </p>
+            </div>
+
+            <!-- Filters -->
+            
+
+            <!-- Maps side by side -->
+            <h3 class="section-title">Dog Movement Across States</h3>
+            <div class="observable-row">
+              <div class="observable-panel">
+                <h4 class="chart-subtitle">Flow Map</h4>
+                <div id="observablehq-flowMap-6a33d79e"></div>
+              </div>
+              <div class="observable-panel">
+                <h4 class="chart-subtitle">Partner States Network</h4>
+                <div id="observablehq-partnerStatesOnly-6a33d79e"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Out-of-state demographics -->
+          <section class="viz-section">
+            <div class="section-banner">
+              <h2>Out-of-State Dog Demographics</h2>
+              <p>
+                Compare the age, size, and sex mix of dogs moving across state lines, broken out
+                by imports into and exports from the selected state.
+              </p>
+            </div>
+
+            <div class="observable-row">
+              <div class="observable-panel">
+                <h4 class="chart-subtitle">State Dog Imports (Out-of-State Dogs Entering)</h4>
+                <div id="observablehq-scatter_pies3-6a33d79e"></div>
+              </div>
+              <div class="observable-panel">
+                <h4 class="chart-subtitle">State Dog Exports (Dogs Leaving the State)</h4>
+                <div id="observablehq-scatter_pies2-6a33d79e"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- In-state activity -->
+          <section class="viz-section">
+            <div class="section-banner">
+              <h2>In-State Shelter Activity</h2>
+              <p>
+                For the selected state, examine how in-state transfers are distributed across
+                organizations and how their demographics compare.
+              </p>
+            </div>
+
+            <div class="observable-row">
+              <div class="observable-panel">
+                <h4 class="chart-subtitle">In-State Dogs per Organization</h4>
+                <div id="observablehq-hist_instate_by_org-6a33d79e"></div>
+              </div>
+              <div class="observable-panel">
+                <h4 class="chart-subtitle">In-State Demographics</h4>
+                <div id="observablehq-scatter_pies4-6a33d79e"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Optional: table at the bottom -->
+          <hr class="section-divider" />
+          <section class="viz-section">
+            <h3 class="section-title">Raw Records (Interactive Table)</h3>
+            <p class="text-muted mb-3">
+              Use the table below to search, sort, and page through the underlying dog travel records
+              for more detailed inspection.
+            </p>
+            <div id="state-table"></div>
+          </section>
+
+          <!-- Observable wiring -->
+          <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@5/dist/inspector.css"
+          />
+          <script type="module">
+            import {Runtime, Inspector} from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@5/dist/runtime.js";
+            import define from "https://api.observablehq.com/d/a4c869afa6166459@489.js?v=4";
+
+            new Runtime().module(define, name => {
+              if (name === "viewof flowMode")
+                return new Inspector(document.querySelector("#observablehq-viewof-flowMode-6a33d79e"));
+              if (name === "viewof state")
+                return new Inspector(document.querySelector("#observablehq-viewof-state-6a33d79e"));
+
+              if (name === "partnerStatesOnly")
+                return new Inspector(document.querySelector("#observablehq-partnerStatesOnly-6a33d79e"));
+              if (name === "flowMap")
+                return new Inspector(document.querySelector("#observablehq-flowMap-6a33d79e"));
+
+              if (name === "scatter_pies3")
+                return new Inspector(document.querySelector("#observablehq-scatter_pies3-6a33d79e"));
+              if (name === "scatter_pies2")
+                return new Inspector(document.querySelector("#observablehq-scatter_pies2-6a33d79e"));
+
+              if (name === "hist_instate_by_org")
+                return new Inspector(document.querySelector("#observablehq-hist_instate_by_org-6a33d79e"));
+              if (name === "scatter_pies4")
+                return new Inspector(document.querySelector("#observablehq-scatter_pies4-6a33d79e"));
+
+              return ["dogTrips","stateColor","partnersData","stateColorLegend","partnerGeom"].includes(name);
+            });
+          </script>
+        </main>
+      </div> <!-- /.row -->
+    </div> <!-- /.container-fluid -->
+
+    <!-- Bootstrap JS bundle via CDN -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- D3 -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <script>
+      // all_travel here is the Python list we passed in render_template
+      window.all_travel = {{ all_travel | tojson }};
+      window.instate_travel = {{ instate_travel | tojson }};
+      window.outstate_travel = {{ outstate_travel | tojson }};
+    </script>
+
+    <!-- Your JS with d3TableWithControls/init logic -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>
+
+
+
+

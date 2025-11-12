@@ -1,0 +1,126 @@
+.bi {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+}
+
+/*
+ * Sidebar
+ */
+
+@media (min-width: 768px) {
+  .sidebar .offcanvas-lg {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 48px;
+  }
+  .navbar-search {
+    display: block;
+  }
+}
+
+.sidebar .nav-link {
+  font-size: .875rem;
+  font-weight: 500;
+}
+
+.sidebar .nav-link.active {
+  color: #2470dc;
+}
+
+.sidebar-heading {
+  font-size: .75rem;
+}
+
+/*
+ * Navbar
+ */
+
+.navbar-brand {
+  padding-top: .75rem;
+  padding-bottom: .75rem;
+  background-color: rgba(0, 0, 0, .25);
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+}
+
+.navbar .form-control {
+  padding: .75rem 1rem;
+}
+
+.section-title {
+  font-family: system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  color: #1f2937; /* slate-800 */
+}
+
+.chart-subtitle {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #374151; /* slate-700 */
+  text-align: center;
+}
+
+/* Layout rows for pairs of charts */
+.observable-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap; /* nicer on smaller screens */
+}
+
+.observable-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Filters row */
+.observable-filters {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-bottom: 1.25rem;
+}
+
+/* Floating filter panel on the left, vertically centered */
+.floating-controls {
+  position: fixed;
+  /* tweak this to sit just to the right of your sidebar */
+  left: 5px;              /* adjust if it overlaps or is too far right */
+  top: 50%;                 /* middle of the viewport */
+  transform: translateY(-50%);  /* true vertical centering */
+  width: 260px;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 1040;
+}
+
+/* Give extra space so charts don't hide behind the floating filters */
+@media (min-width: 992px) {
+  .charts-with-floating-controls {
+    margin-left: 290px; /* a bit more than .floating-controls width */
+  }
+}
+
+/* On smaller screens, revert to normal stacked layout */
+@media (max-width: 991.98px) {
+  .floating-controls {
+    position: static;
+    width: auto;
+    transform: none;
+    box-shadow: none;
+    margin-bottom: 1.5rem;
+  }
+
+  .charts-with-floating-controls {
+    margin-left: 0;
+  }
+}
