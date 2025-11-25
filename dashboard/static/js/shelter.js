@@ -9,33 +9,34 @@
     }
   
     const SHELTER_FIELD = "shelter_name";
-    const FOUND_FIELD = "Found"; // column you added for origin
+    const FOUND_FIELD = "Found"; // your origin column
   
-    // DOM targets for dropdown + labels
+    // cards pagination: target ~3 rows/page (12 cards on large screens)
+    const CARDS_PER_PAGE = 12;
+    let cardPage = 0; // 0-based page index
+  
+    // DOM elements
     const shelterListContainer = d3.select("#shelterListContainer");
     const searchInput = d3.select("#shelterSearchInput");
     const resetBtn = d3.select("#resetShelterFilter");
     const label = d3.select("#selectedShelterLabel");
     const dropdownBtn = d3.select("#shelterDropdownBtn");
   
-    // DOM targets for table + carousel
     const stateTableEl = document.getElementById("state-table");
     const totalDogsEl = document.getElementById("totalDogsCount");
     const carouselShelterLabelEl = document.getElementById("carouselShelterLabel");
     const topStatesListEl = document.getElementById("topStatesList");
+    const dogCardsContainer = document.getElementById("dogCardsContainer");
+    const dogCardsPagerEl = document.getElementById("dogCardsPager");
   
     // ---------- BUILD SHELTER LIST ----------
-  
     const shelterMap = new Map();
     shelterData.forEach((row) => {
       const name = row[SHELTER_FIELD];
       if (!name) return;
   
       if (!shelterMap.has(name)) {
-        shelterMap.set(name, {
-          name: name,
-          count: 0,
-        });
+        shelterMap.set(name, { name, count: 0 });
       }
       shelterMap.get(name).count += 1;
     });
@@ -45,29 +46,28 @@
     );
   
     function renderShelterList(filterText = "") {
-      const filtered = shelters.filter((s) =>
-        s.name.toLowerCase().includes(filterText.toLowerCase())
-      );
+      const search = filterText.toLowerCase();
   
       shelterListContainer
         .selectAll("button.shelter-item")
-        .data(filtered, (d) => d.name)
+        .data(
+          shelters.filter((s) => s.name.toLowerCase().includes(search)),
+          (d) => d.name
+        )
         .join("button")
         .attr("class", "dropdown-item shelter-item")
         .text((d) => `${d.name} (${d.count})`)
-        .on("click", (event, d) => selectShelter(d.name));
+        .on("click", (_, d) => selectShelter(d.name));
     }
   
-    // ---------- TABLE RENDERING, DRIVEN BY SELECTION ----------
-  
+    // ---------- TABLE ----------
     function renderShelterTable(rows) {
       if (!stateTableEl) return;
   
-      // Clear old table
-      stateTableEl.innerHTML = "";
+      stateTableEl.innerHTML = ""; // clear old table
   
       const tableNode = d3TableWithControls(rows, {
-        searchKey: "name", // dog name
+        searchKey: "name",
         pageSize: 25,
         filters: [
           { key: "age", label: "Age" },
@@ -81,15 +81,11 @@
       stateTableEl.appendChild(tableNode);
     }
   
-    // ---------- CAROUSEL METRICS (TOTAL DOGS + TOP FOUND) ----------
-  
+    // ---------- CAROUSEL ----------
     function updateCarouselMetrics(rows, shelterName) {
       const total = rows.length;
   
-      if (totalDogsEl) {
-        totalDogsEl.textContent = total.toString();
-      }
-  
+      if (totalDogsEl) totalDogsEl.textContent = total.toString();
       if (carouselShelterLabelEl) {
         carouselShelterLabelEl.textContent =
           shelterName === "ALL" ? "All shelters" : shelterName;
@@ -97,11 +93,10 @@
   
       if (!topStatesListEl) return;
   
-      // Compute counts for Found field
+      // top 3 Found sources
       const counts = new Map();
       rows.forEach((r) => {
-        let key = r[FOUND_FIELD];
-        if (key == null || key === "") key = "Unknown";
+        let key = r[FOUND_FIELD] || "Unknown";
         counts.set(key, (counts.get(key) || 0) + 1);
       });
   
@@ -112,19 +107,17 @@
       topStatesListEl.innerHTML = "";
   
       if (!top.length) {
-        const li = document.createElement("li");
-        li.className = "list-group-item";
-        li.textContent = "No origin data available.";
-        topStatesListEl.appendChild(li);
+        topStatesListEl.innerHTML =
+          "<li class='list-group-item'>No origin data available.</li>";
         return;
       }
   
       top.forEach(([state, count]) => {
-        const li = document.createElement("li");
-        li.className = "list-group-item d-flex justify-content-between align-items-center";
-  
         const pct = total ? Math.round((count / total) * 100) : 0;
   
+        const li = document.createElement("li");
+        li.className =
+          "list-group-item d-flex justify-content-between align-items-center";
         li.innerHTML = `
           <span>${state}</span>
           <span class="badge bg-secondary rounded-pill">${count} (${pct}%)</span>
@@ -133,22 +126,115 @@
       });
     }
   
-    // ---------- MAIN DASHBOARD UPDATE (TABLE + CAROUSEL) ----------
+    // ---------- DOG CARDS (ONLY WHEN SHELTER SELECTED, PAGINATED) ----------
+    function renderDogCards(rows, shelterName) {
+      if (!dogCardsContainer) return;
   
-    function updateShelterDashboard(rows, shelterName) {
-      console.log(
-        "Shelter dashboard update:",
-        shelterName,
-        "| rows:",
-        rows.length
-      );
+      dogCardsContainer.innerHTML = ""; // clean previous
+      if (dogCardsPagerEl) dogCardsPagerEl.innerHTML = ""; // clear pager
   
-      renderShelterTable(rows);
-      updateCarouselMetrics(rows, shelterName);
+      // Only render cards when a shelter is selected
+      if (shelterName === "ALL") {
+        dogCardsContainer.innerHTML = `
+          <p class="text-muted mt-2">
+            Select a shelter from the dropdown to view individual dog cards.
+          </p>
+        `;
+        return;
+      }
+  
+      const totalCards = rows.length;
+      if (!totalCards) {
+        dogCardsContainer.innerHTML = `
+          <p class="text-muted mt-2">
+            No dogs found for this shelter.
+          </p>
+        `;
+        return;
+      }
+  
+      const totalPages = Math.max(1, Math.ceil(totalCards / CARDS_PER_PAGE));
+      // keep current page in range
+      cardPage = Math.min(cardPage, totalPages - 1);
+  
+      const start = cardPage * CARDS_PER_PAGE;
+      const end = Math.min(start + CARDS_PER_PAGE, totalCards);
+      const pageRows = rows.slice(start, end);
+  
+      pageRows.forEach((dog) => {
+        const card = document.createElement("div");
+        card.className = "col-12 col-sm-6 col-md-4 col-lg-3";
+  
+        const name = dog.name ?? "Unknown";
+        const age = dog.age ?? "Unknown";
+        const breed = dog.breed_primary ?? "Unknown";
+        const size = dog.size ?? "Unknown";
+        const sex = dog.sex ?? dog.gender ?? "Unknown";
+        const desc = dog.description ?? "No description available.";
+  
+        card.innerHTML = `
+          <div class="flip-card">
+            <div class="flip-card-inner">
+  
+              <!-- Front -->
+              <div class="flip-card-front d-flex flex-column justify-content-center">
+                <h5 class="fw-bold mb-2">${name}</h5>
+                <p class="mb-1"><strong>Age:</strong> ${age}</p>
+                <p class="mb-1"><strong>Breed:</strong> ${breed}</p>
+                <p class="mb-1"><strong>Size:</strong> ${size}</p>
+                <p class="mb-0"><strong>Sex:</strong> ${sex}</p>
+              </div>
+  
+              <!-- Back -->
+              <div class="flip-card-back d-flex align-items-center justify-content-center">
+                <p class="px-2 mb-0">${desc}</p>
+              </div>
+  
+            </div>
+          </div>
+        `;
+  
+        dogCardsContainer.appendChild(card);
+      });
+  
+      // build pager
+      if (dogCardsPagerEl && totalPages > 1) {
+        const prevBtn = document.createElement("button");
+        prevBtn.className = "btn btn-sm btn-outline-secondary";
+        prevBtn.textContent = "Prev";
+        prevBtn.disabled = cardPage === 0;
+        prevBtn.onclick = () => {
+          cardPage = Math.max(0, cardPage - 1);
+          renderDogCards(rows, shelterName);
+        };
+  
+        const nextBtn = document.createElement("button");
+        nextBtn.className = "btn btn-sm btn-outline-secondary";
+        nextBtn.textContent = "Next";
+        nextBtn.disabled = cardPage >= totalPages - 1;
+        nextBtn.onclick = () => {
+          cardPage = Math.min(totalPages - 1, cardPage + 1);
+          renderDogCards(rows, shelterName);
+        };
+  
+        const info = document.createElement("span");
+        info.className = "text-muted small";
+        info.textContent = `Page ${cardPage + 1} of ${totalPages} • Showing ${start + 1}–${end} of ${totalCards}`;
+  
+        dogCardsPagerEl.appendChild(info);
+        dogCardsPagerEl.appendChild(prevBtn);
+        dogCardsPagerEl.appendChild(nextBtn);
+      }
     }
   
-    // ---------- DROPDOWN BEHAVIOR ----------
+    // ---------- MAIN DASHBOARD UPDATE ----------
+    function updateShelterDashboard(rows, shelterName) {
+      renderShelterTable(rows);
+      updateCarouselMetrics(rows, shelterName);
+      renderDogCards(rows, shelterName);
+    }
   
+    // ---------- DROPDOWN LOGIC ----------
     if (!searchInput.empty()) {
       searchInput.on("input", (event) => {
         renderShelterList(event.target.value);
@@ -159,6 +245,7 @@
       resetBtn.on("click", () => {
         dropdownBtn.text("Select Your Shelter");
         label.text("Showing all shelters");
+        cardPage = 0;
         updateShelterDashboard(shelterData, "ALL");
       });
     }
@@ -167,25 +254,30 @@
       const meta = shelterMap.get(shelterName);
   
       dropdownBtn.text(shelterName);
-      label.text(
-        `${shelterName} • ${meta ? meta.count : 0} dogs`
-      );
+      label.text(`${shelterName} • ${meta ? meta.count : 0} dogs`);
   
+      cardPage = 0; // reset to first page when switching shelters
       const rows = shelterData.filter(
         (r) => r[SHELTER_FIELD] === shelterName
       );
+  
       updateShelterDashboard(rows, shelterName);
     }
   
-    // ---------- INITIALIZE ----------
-  
+    // ---------- INIT ----------
     renderShelterList("");
     label.text("Showing all shelters");
+  
+    // Start with:
+    // - Full table
+    // - Carousel for ALL
+    // - No dog cards (just hint)
     updateShelterDashboard(shelterData, "ALL");
   })();
   
+  
   // ---------------------------------------------------------
-  // d3TableWithControls (same as your existing version)
+  // d3TableWithControls (same as before, with correct sort)
   // ---------------------------------------------------------
   function d3TableWithControls(
     data,
@@ -196,7 +288,6 @@
       filters = [],
     } = {}
   ) {
-    // --- include ALL columns seen in any row ---
     const columns = Array.from(
       data.reduce((s, r) => {
         for (const k of Object.keys(r)) s.add(k);
@@ -210,13 +301,11 @@
     let page = 0;
     let ps = pageSize;
   
-    // keep track of filter selections
     const filterState = {};
     filters.forEach((f) => {
       filterState[f.key] = "all";
     });
   
-    // root + styles
     const root = d3
       .create("div")
       .attr("class", "d3-table-wrap")
@@ -235,10 +324,8 @@
       .d3-filter-label{display:flex;align-items:center;gap:4px}
     `);
   
-    // ---------- CONTROLS (TOP) ----------
     const ctrTop = root.append("div").attr("class", "d3-controls");
   
-    // search
     ctrTop
       .append("label")
       .attr("class", "d3-filter-label")
@@ -253,7 +340,6 @@
         update();
       });
   
-    // filters (dropdowns)
     filters.forEach((f) => {
       const values = Array.from(
         new Set(
@@ -290,7 +376,6 @@
         .text((d) => d);
     });
   
-    // rows-per-page selector
     ctrTop.append("span").text("Rows:");
     const sizeSel = ctrTop
       .append("select")
@@ -311,7 +396,6 @@
   
     ctrTop.append("span").attr("class", "d3-spacer");
   
-    // paging buttons (top)
     const prevTop = ctrTop
       .append("button")
       .attr("class", "d3-btn")
@@ -332,7 +416,6 @@
   
     const infoTop = ctrTop.append("span").attr("class", "badge");
   
-    // ---------- TABLE ----------
     const scroller = root.append("div").attr("class", "scroll-x");
     const table = scroller.append("table").attr("class", "d3-table");
     const thead = table.append("thead");
@@ -361,7 +444,6 @@
           .text("↕");
       });
   
-    // ---------- CONTROLS (BOTTOM) ----------
     const ctrBot = root.append("div").attr("class", "d3-controls");
     ctrBot.append("span").attr("class", "d3-spacer");
   
@@ -385,7 +467,6 @@
   
     const infoBot = ctrBot.append("span").attr("class", "badge");
   
-    // ---------- HELPERS ----------
     const cmp = (a, b) => {
       if (a == null && b == null) return 0;
       if (a == null) return 1;
@@ -402,7 +483,6 @@
     const currentRows = () => {
       let rows = data;
   
-      // search
       if (q)
         rows = rows.filter((d) =>
           String(d[searchKey] ?? "")
@@ -410,7 +490,6 @@
             .includes(q)
         );
   
-      // dropdown filters
       filters.forEach((f) => {
         const selected = filterState[f.key];
         if (selected !== "all") {
@@ -420,11 +499,12 @@
         }
       });
   
-      // sorting
       if (sortCol)
         rows = rows
           .slice()
-          .sort((a, b) => cmp(a[sortCol], b[sortCol]) * (sortAsc ? 1 : -1));
+          .sort(
+            (a, b) => cmp(a[sortCol], b[sortCol]) * (sortAsc ? 1 : -1)
+          );
   
       return rows;
     };
@@ -437,21 +517,18 @@
       const end = Math.min(start + ps, rows.length);
       const pageRows = rows.slice(start, end);
   
-      // header indicators
       thead.selectAll(".sort").text((_, i, nodes) => {
         const col = columns[nodes[i].parentNode.cellIndex];
         if (col !== sortCol) return "↕";
         return sortAsc ? "▲" : "▼";
       });
   
-      // body
       const tr = tbody.selectAll("tr").data(pageRows).join("tr");
       tr.selectAll("td")
         .data((d) => columns.map((c) => d[c]))
         .join("td")
         .text((v) => (v == null ? "" : v));
   
-      // controls
       prevTop.attr("disabled", page <= 0 ? true : null);
       nextTop.attr("disabled", page >= pages - 1 ? true : null);
       prevBot.attr("disabled", page <= 0 ? true : null);
@@ -472,6 +549,7 @@
     update();
     return root.node();
   }
+    
   
   
   
