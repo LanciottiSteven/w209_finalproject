@@ -3,6 +3,9 @@
 (function () {
     const shelterData = window.shelter_data || [];
   
+    console.log("🔍 Incoming shelter_data:", shelterData);
+
+
     if (!shelterData.length) {
       console.warn("No shelter_data found.");
       return;
@@ -14,6 +17,7 @@
     // cards pagination: target ~3 rows/page (12 cards on large screens)
     const CARDS_PER_PAGE = 12;
     let cardPage = 0; // 0-based page index
+    let selectedBreed = null;
   
     // DOM elements
     const shelterListContainer = d3.select("#shelterListContainer");
@@ -128,112 +132,329 @@
   
     // ---------- DOG CARDS (ONLY WHEN SHELTER SELECTED, PAGINATED) ----------
     function renderDogCards(rows, shelterName) {
-      if (!dogCardsContainer) return;
-  
-      dogCardsContainer.innerHTML = ""; // clean previous
-      if (dogCardsPagerEl) dogCardsPagerEl.innerHTML = ""; // clear pager
-  
-      // Only render cards when a shelter is selected
-      if (shelterName === "ALL") {
-        dogCardsContainer.innerHTML = `
-          <p class="text-muted mt-2">
-            Select a shelter from the dropdown to view individual dog cards.
-          </p>
-        `;
-        return;
-      }
-  
-      const totalCards = rows.length;
-      if (!totalCards) {
-        dogCardsContainer.innerHTML = `
-          <p class="text-muted mt-2">
-            No dogs found for this shelter.
-          </p>
-        `;
-        return;
-      }
-  
-      const totalPages = Math.max(1, Math.ceil(totalCards / CARDS_PER_PAGE));
-      // keep current page in range
-      cardPage = Math.min(cardPage, totalPages - 1);
-  
-      const start = cardPage * CARDS_PER_PAGE;
-      const end = Math.min(start + CARDS_PER_PAGE, totalCards);
-      const pageRows = rows.slice(start, end);
-  
-      pageRows.forEach((dog) => {
-        const card = document.createElement("div");
-        card.className = "col-12 col-sm-6 col-md-4 col-lg-3";
-  
-        const name = dog.name ?? "Unknown";
-        const age = dog.age ?? "Unknown";
-        const breed = dog.breed_primary ?? "Unknown";
-        const size = dog.size ?? "Unknown";
-        const sex = dog.sex ?? dog.gender ?? "Unknown";
-        const desc = dog.description ?? "No description available.";
-  
-        card.innerHTML = `
-          <div class="flip-card">
-            <div class="flip-card-inner">
-  
-              <!-- Front -->
-              <div class="flip-card-front d-flex flex-column justify-content-center">
-                <h5 class="fw-bold mb-2">${name}</h5>
-                <p class="mb-1"><strong>Age:</strong> ${age}</p>
-                <p class="mb-1"><strong>Breed:</strong> ${breed}</p>
-                <p class="mb-1"><strong>Size:</strong> ${size}</p>
-                <p class="mb-0"><strong>Sex:</strong> ${sex}</p>
+        if (!dogCardsContainer) return;
+      
+        dogCardsContainer.innerHTML = "";
+        if (dogCardsPagerEl) dogCardsPagerEl.innerHTML = "";
+      
+        // Only render cards when a shelter is selected
+        if (shelterName === "ALL") {
+          dogCardsContainer.innerHTML = `
+            <p class="text-muted mt-2">
+              Select a shelter from the dropdown to view individual dog cards.
+            </p>
+          `;
+          return;
+        }
+      
+        // ---- Apply breed filter if one is selected from the chart ----
+        let filteredRows = rows;
+        if (selectedBreed) {
+          filteredRows = rows.filter((d) => {
+            const b = (d.breed_primary || "Unknown").trim();
+            return b === selectedBreed;
+          });
+        }
+      
+        const totalCards = filteredRows.length;
+        if (!totalCards) {
+          const msg = selectedBreed
+            ? `No dogs found for breed "${selectedBreed}" in this shelter.`
+            : "No dogs found for this shelter.";
+      
+          dogCardsContainer.innerHTML = `
+            <p class="text-muted mt-2">${msg}</p>
+          `;
+          return;
+        }
+      
+        const totalPages = Math.max(1, Math.ceil(totalCards / CARDS_PER_PAGE));
+        cardPage = Math.min(cardPage, totalPages - 1);
+      
+        const start = cardPage * CARDS_PER_PAGE;
+        const end = Math.min(start + CARDS_PER_PAGE, totalCards);
+        const pageRows = filteredRows.slice(start, end);
+      
+        pageRows.forEach((dog) => {
+          const card = document.createElement("div");
+          card.className = "col-12 col-sm-6 col-md-4 col-lg-3";
+      
+          // image logic as you already have it
+          let img = dog.image || null;
+          if (img) {
+            img = String(img).trim();
+            const parts = img.split(/[\\/]/);
+            const fileName = parts[parts.length - 1];
+            if (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/")) {
+              // use as-is
+            } else if (window.dog_image_base) {
+              img = window.dog_image_base + fileName;
+            } else {
+              img = "/static/images/" + fileName;
+            }
+          } else {
+            img = "/static/images/image2.jpg"; // fallback
+          }
+      
+          const name = dog.name ?? "Unknown";
+          const age = dog.age ?? "Unknown";
+          const breed = dog.breed_primary ?? "Unknown";
+          const size = dog.size ?? "Unknown";
+          const sex = dog.sex ?? dog.gender ?? "Unknown";
+          const desc = dog.description ?? "No description available.";
+      
+          card.innerHTML = `
+            <div class="flip-card">
+              <div class="flip-card-inner">
+      
+                <!-- FRONT -->
+                <div class="flip-card-front d-flex flex-column justify-content-end"
+                     style="
+                       background-image: url('${img}');
+                       background-size: cover;
+                       background-position: center;
+                       background-repeat: no-repeat;
+                       color: white;
+                       text-shadow: 0 0 6px black;
+                     ">
+                  <div class="p-2" style="background: rgba(0,0,0,0.4); border-radius: 6px;">
+                    <h5 class="fw-bold mb-1">${name}</h5>
+                    <p class="mb-1"><strong>Age:</strong> ${age}</p>
+                    <p class="mb-1"><strong>Breed:</strong> ${breed}</p>
+                    <p class="mb-1"><strong>Size:</strong> ${size}</p>
+                    <p class="mb-0"><strong>Sex:</strong> ${sex}</p>
+                  </div>
+                </div>
+      
+                <!-- BACK -->
+                <div class="flip-card-back d-flex align-items-center justify-content-center">
+                  <p class="px-2 mb-0">${desc}</p>
+                </div>
+      
               </div>
-  
-              <!-- Back -->
-              <div class="flip-card-back d-flex align-items-center justify-content-center">
-                <p class="px-2 mb-0">${desc}</p>
-              </div>
-  
             </div>
-          </div>
-        `;
-  
-        dogCardsContainer.appendChild(card);
-      });
-  
-      // build pager
-      if (dogCardsPagerEl && totalPages > 1) {
-        const prevBtn = document.createElement("button");
-        prevBtn.className = "btn btn-sm btn-outline-secondary";
-        prevBtn.textContent = "Prev";
-        prevBtn.disabled = cardPage === 0;
-        prevBtn.onclick = () => {
-          cardPage = Math.max(0, cardPage - 1);
-          renderDogCards(rows, shelterName);
-        };
-  
-        const nextBtn = document.createElement("button");
-        nextBtn.className = "btn btn-sm btn-outline-secondary";
-        nextBtn.textContent = "Next";
-        nextBtn.disabled = cardPage >= totalPages - 1;
-        nextBtn.onclick = () => {
-          cardPage = Math.min(totalPages - 1, cardPage + 1);
-          renderDogCards(rows, shelterName);
-        };
-  
-        const info = document.createElement("span");
-        info.className = "text-muted small";
-        info.textContent = `Page ${cardPage + 1} of ${totalPages} • Showing ${start + 1}–${end} of ${totalCards}`;
-  
-        dogCardsPagerEl.appendChild(info);
-        dogCardsPagerEl.appendChild(prevBtn);
-        dogCardsPagerEl.appendChild(nextBtn);
+          `;
+      
+          dogCardsContainer.appendChild(card);
+        });
+      
+        // ----- PAGINATION -----
+        if (dogCardsPagerEl && totalPages > 1) {
+          const prevBtn = document.createElement("button");
+          prevBtn.className = "btn btn-sm btn-outline-secondary";
+          prevBtn.textContent = "Prev";
+          prevBtn.disabled = cardPage === 0;
+          prevBtn.onclick = () => {
+            cardPage = Math.max(0, cardPage - 1);
+            renderDogCards(rows, shelterName);
+          };
+      
+          const nextBtn = document.createElement("button");
+          nextBtn.className = "btn btn-sm btn-outline-secondary";
+          nextBtn.textContent = "Next";
+          nextBtn.disabled = cardPage >= totalPages - 1;
+          nextBtn.onclick = () => {
+            cardPage = Math.min(totalPages - 1, cardPage + 1);
+            renderDogCards(rows, shelterName);
+          };
+      
+          const info = document.createElement("span");
+          info.className = "text-muted small me-2";
+          info.textContent = `Page ${cardPage + 1} of ${totalPages} • Showing ${start + 1}–${end} of ${totalCards}`;
+      
+          dogCardsPagerEl.appendChild(info);
+          dogCardsPagerEl.appendChild(prevBtn);
+          dogCardsPagerEl.appendChild(nextBtn);
+        }
       }
-    }
+      
+      
+      
   
     // ---------- MAIN DASHBOARD UPDATE ----------
     function updateShelterDashboard(rows, shelterName) {
-      renderShelterTable(rows);
-      updateCarouselMetrics(rows, shelterName);
-      renderDogCards(rows, shelterName);
+        renderShelterTable(rows);
+        updateCarouselMetrics(rows, shelterName);
+        renderBreedChart(rows, shelterName);   
+        renderOriginsSankey(rows, shelterName);
+        renderDogCards(rows, shelterName);
+      }
+      
+// ---------- Breed Chart ----------
+      function renderBreedChart(rows, shelterName) {
+        const container = document.getElementById("breedBarChartContainer");
+        const svgEl = document.getElementById("breedBarChart");
+        if (!container || !svgEl) return;
+      
+        const svg = d3.select(svgEl);
+      
+        // Clear previous chart
+        svg.selectAll("*").remove();
+      
+        // If no data, show a little message
+        if (!rows || !rows.length) {
+          const msg = svg
+            .append("text")
+            .attr("x", "50%")
+            .attr("y", "50%")
+            .attr("text-anchor", "middle")
+            .attr("fill", "#999")
+            .text("No breed data available for this selection.");
+          return;
+        }
+      
+        // ---- Aggregate counts by breed_primary ----
+        const countsMap = new Map();
+        rows.forEach((d) => {
+          let breed = d.breed_primary || "Unknown";
+          breed = String(breed).trim();
+          countsMap.set(breed, (countsMap.get(breed) || 0) + 1);
+        });
+      
+        let data = Array.from(countsMap, ([breed, count]) => ({ breed, count }));
+        // Sort by count desc, keep top N
+        const MAX_BREEDS = 15;
+        data.sort((a, b) => b.count - a.count);
+        data = data.slice(0, MAX_BREEDS);
+      
+        const total = rows.length;
+      
+        // ---- Dimensions ----
+        const margin = { top: 20, right: 20, bottom: 30, left: 150 };
+        const fullWidth = container.clientWidth || 600;
+        const fullHeight = 20 * data.length + margin.top + margin.bottom;
+        const width = fullWidth - margin.left - margin.right;
+        const height = fullHeight - margin.top - margin.bottom;
+      
+        svg
+          .attr("width", fullWidth)
+          .attr("height", fullHeight);
+      
+        const g = svg
+          .append("g")
+          .attr("transform", `translate(${margin.left},${margin.top})`);
+      
+        // ---- Scales ----
+        const x = d3
+          .scaleLinear()
+          .domain([0, d3.max(data, (d) => d.count) || 1])
+          .nice()
+          .range([0, width]);
+      
+        const y = d3
+          .scaleBand()
+          .domain(data.map((d) => d.breed))
+          .range([0, height])
+          .padding(0.15);
+      
+        // ---- Axes ----
+        const maxCount = d3.max(data, d => d.count) || 1;
+        const integerTicks = d3.range(0, maxCount + 1); // 0,1,2,3,...maxCount
+
+        const xAxis = d3.axisBottom(x)
+            .tickValues(integerTicks)
+            .tickFormat(d3.format("d"));
+        const yAxis = d3.axisLeft(y);
+      
+        g.append("g")
+          .attr("transform", `translate(0,${height})`)
+          .call(xAxis)
+          .call((g) => g.selectAll("text").style("font-size", "10px"));
+      
+        g.append("g")
+          .call(yAxis)
+          .call((g) => g.selectAll("text").style("font-size", "10px"));
+      
+        // ---- Tooltip ----
+        let tooltip = d3.select("#breedTooltip");
+        if (tooltip.empty()) {
+          tooltip = d3
+            .select("body")
+            .append("div")
+            .attr("id", "breedTooltip")
+            .style("position", "absolute")
+            .style("pointer-events", "none")
+            .style("background", "rgba(0,0,0,0.8)")
+            .style("color", "#fff")
+            .style("padding", "4px 8px")
+            .style("border-radius", "4px")
+            .style("font-size", "11px")
+            .style("opacity", 0);
+        }
+      
+        const formatPct = d3.format(".1%");
+      
+        // ---- Bars ----
+          // ---- Bars ----
+  const bars = g.selectAll("rect.bar")
+  .data(data)
+  .join("rect")
+  .attr("class", "bar")
+  .attr("x", 0)
+  .attr("y", (d) => y(d.breed))
+  .attr("height", y.bandwidth())
+  .attr("width", (d) => x(d.count))
+  .attr("fill", "#5a8dee");
+
+// helper to color bars based on selectedBreed
+function updateBarStyles() {
+  bars.attr("fill", (d) =>
+    d.breed === selectedBreed ? "#f39c12" : "#5a8dee"
+  );
+}
+
+updateBarStyles();
+
+bars
+  .on("mouseover", function (event, d) {
+    d3.select(this).attr("fill", "#345bb3");
+    tooltip
+      .style("opacity", 1)
+      .html(() => {
+        const pct = total ? d.count / total : 0;
+        return `
+          <strong>${d.breed}</strong><br/>
+          ${d.count} dog${d.count === 1 ? "" : "s"}<br/>
+          ${formatPct(pct)} of selection
+        `;
+      });
+  })
+  .on("mousemove", function (event) {
+    tooltip
+      .style("left", event.pageX + 12 + "px")
+      .style("top", event.pageY - 20 + "px");
+  })
+  .on("mouseout", function () {
+    tooltip.style("opacity", 0);
+    updateBarStyles(); // restore selected highlight if any
+  })
+  .on("click", function (event, d) {
+    // Toggle selection: click same breed to clear filter
+    if (selectedBreed === d.breed) {
+      selectedBreed = null;
+    } else {
+      selectedBreed = d.breed;
     }
-  
+    cardPage = 0; // reset card pagination when changing filter
+    renderDogCards(rows, shelterName);
+    updateBarStyles();
+  });
+
+      
+        // ---- Small subtitle at top ----
+        const subtitle = shelterName === "ALL"
+          ? "Top breeds across all shelters"
+          : `Top breeds for ${shelterName}`;
+      
+        svg
+          .append("text")
+          .attr("x", margin.left)
+          .attr("y", 12)
+          .attr("fill", "#555")
+          .attr("font-size", "11px")
+          .text(subtitle);
+      }
+        
     // ---------- DROPDOWN LOGIC ----------
     if (!searchInput.empty()) {
       searchInput.on("input", (event) => {
@@ -257,6 +478,7 @@
       label.text(`${shelterName} • ${meta ? meta.count : 0} dogs`);
   
       cardPage = 0; // reset to first page when switching shelters
+      selectedBreed = null;
       const rows = shelterData.filter(
         (r) => r[SHELTER_FIELD] === shelterName
       );
@@ -274,6 +496,190 @@
     // - No dog cards (just hint)
     updateShelterDashboard(shelterData, "ALL");
   })();
+
+  function renderOriginsSankey(rows, shelterName) {
+    const container = document.getElementById("originSankeyContainer");
+    const svgEl = document.getElementById("originSankey");
+    if (!container || !svgEl) return;
+  
+    const svg = d3.select(svgEl);
+    svg.selectAll("*").remove(); // clear previous chart
+  
+    // If no rows, show a simple "no data" message
+    if (!rows || !rows.length) {
+      svg
+        .append("text")
+        .attr("x", "50%")
+        .attr("y", "50%")
+        .attr("text-anchor", "middle")
+        .attr("fill", "#999")
+        .text("No origin data for this selection.");
+      return;
+    }
+  
+    const FOUND_FIELD = "Found";
+    const SHELTER_FIELD = "shelter_name";
+  
+    // ---- Build link counts: Found -> Shelter ----
+    const linkMap = new Map();
+  
+    rows.forEach((r) => {
+      let from = r[FOUND_FIELD] || "Unknown origin";
+      from = String(from).trim();
+  
+      // For ALL shelters, let each shelter be a node.
+      // For a specific shelter, we still use that shelterName as target.
+      let to =
+        shelterName === "ALL"
+          ? (r[SHELTER_FIELD] || "Unknown shelter")
+          : shelterName;
+  
+      to = String(to).trim();
+  
+      const key = from + "||" + to;
+      linkMap.set(key, (linkMap.get(key) || 0) + 1);
+    });
+  
+    let linksArr = Array.from(linkMap, ([key, value]) => {
+      const [from, to] = key.split("||");
+      return { sourceName: from, targetName: to, value };
+    });
+  
+    // Sort by flow size and limit number of links to keep chart readable
+    const MAX_LINKS = 30;
+    linksArr.sort((a, b) => b.value - a.value);
+    linksArr = linksArr.slice(0, MAX_LINKS);
+  
+    if (!linksArr.length) {
+      svg
+        .append("text")
+        .attr("x", "50%")
+        .attr("y", "50%")
+        .attr("text-anchor", "middle")
+        .attr("fill", "#999")
+        .text("No origin flows to display.");
+      return;
+    }
+  
+    // ---- Build node list from link endpoints ----
+    const nodeNames = new Set();
+    linksArr.forEach((l) => {
+      nodeNames.add(l.sourceName);
+      nodeNames.add(l.targetName);
+    });
+  
+    const nodes = Array.from(nodeNames).map((name) => ({ name }));
+    const nameToIndex = new Map();
+    nodes.forEach((n, i) => nameToIndex.set(n.name, i));
+  
+    const links = linksArr.map((l) => ({
+      source: nameToIndex.get(l.sourceName),
+      target: nameToIndex.get(l.targetName),
+      value: l.value,
+    }));
+  
+    // ---- Dimensions & Sankey layout ----
+    const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+    const fullWidth = container.clientWidth || 600;
+    const fullHeight = 320;
+    const width = fullWidth - margin.left - margin.right;
+    const height = fullHeight - margin.top - margin.bottom;
+  
+    svg.attr("width", fullWidth).attr("height", fullHeight);
+  
+    const g = svg
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+  
+    const sankeyGen = d3
+      .sankey()
+      .nodeWidth(14)
+      .nodePadding(10)
+      .extent([
+        [0, 0],
+        [width, height],
+      ]);
+  
+    const graph = sankeyGen({
+      nodes: nodes.map((d) => Object.assign({}, d)),
+      links: links.map((d) => Object.assign({}, d)),
+    });
+  
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
+  
+    // ---- Tooltip ----
+    let tooltip = d3.select("#originSankeyTooltip");
+    if (tooltip.empty()) {
+      tooltip = d3
+        .select("body")
+        .append("div")
+        .attr("id", "originSankeyTooltip")
+        .style("position", "absolute")
+        .style("pointer-events", "none")
+        .style("background", "rgba(0,0,0,0.8)")
+        .style("color", "#fff")
+        .style("padding", "4px 8px")
+        .style("border-radius", "4px")
+        .style("font-size", "11px")
+        .style("opacity", 0);
+    }
+  
+    // ---- Links ----
+    const link = g
+      .append("g")
+      .attr("fill", "none")
+      .selectAll("path")
+      .data(graph.links)
+      .join("path")
+      .attr("d", d3.sankeyLinkHorizontal())
+      .attr("stroke", (d) => color(d.source.name))
+      .attr("stroke-opacity", 0.4)
+      .attr("stroke-width", (d) => Math.max(1, d.width))
+      .on("mouseover", function (event, d) {
+        d3.select(this).attr("stroke-opacity", 0.8);
+        tooltip
+          .style("opacity", 1)
+          .html(
+            `<strong>${d.source.name}</strong> → <strong>${d.target.name}</strong><br/>
+             ${d.value} dog${d.value === 1 ? "" : "s"}`
+          );
+      })
+      .on("mousemove", function (event) {
+        tooltip
+          .style("left", event.pageX + 12 + "px")
+          .style("top", event.pageY - 20 + "px");
+      })
+      .on("mouseout", function () {
+        d3.select(this).attr("stroke-opacity", 0.4);
+        tooltip.style("opacity", 0);
+      });
+  
+    // ---- Nodes ----
+    const node = g
+      .append("g")
+      .selectAll("g")
+      .data(graph.nodes)
+      .join("g");
+  
+    node
+      .append("rect")
+      .attr("x", (d) => d.x0)
+      .attr("y", (d) => d.y0)
+      .attr("height", (d) => Math.max(1, d.y1 - d.y0))
+      .attr("width", (d) => d.x1 - d.x0)
+      .attr("fill", (d) => color(d.name))
+      .attr("stroke", "#333");
+  
+    node
+      .append("text")
+      .attr("x", (d) => (d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6))
+      .attr("y", (d) => (d.y0 + d.y1) / 2)
+      .attr("dy", "0.35em")
+      .attr("text-anchor", (d) => (d.x0 < width / 2 ? "start" : "end"))
+      .attr("font-size", "10px")
+      .text((d) => d.name);
+  }
+  
   
   
   // ---------------------------------------------------------
