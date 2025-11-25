@@ -13,7 +13,7 @@ outstate_travel_records = outstate_travel.to_dict(orient="records")
 
 @app.route('/')
 def home():
-    
+
     return render_template('index.html',
                            all_travel=all_travel_records,
                            instate_travel=instate_travel_records,
@@ -23,7 +23,7 @@ def home():
 
 @app.route("/state-dashboard")
 def state_dashboard():
-    return render_template("state_dashboard.html", 
+    return render_template("state_dashboard.html",
                            all_travel=all_travel_records,
                            instate_travel=instate_travel_records,
                            outstate_travel = outstate_travel_records,
@@ -31,7 +31,7 @@ def state_dashboard():
 
 @app.route("/shelter-dashboard")
 def shelter_dashboard():
-    return render_template("shelter_dashboard.html", 
+    return render_template("shelter_dashboard.html",
                            all_travel=all_travel_records,
                            instate_travel=instate_travel_records,
                            outstate_travel = outstate_travel_records,
