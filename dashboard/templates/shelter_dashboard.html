@@ -149,16 +149,113 @@
                 Explore shelter-level performance, intake, and adoption trends to better
                 understand local needs and opportunities.
             </p>
-            <div
-              id="state-chart"
-              class="border rounded bg-light d-flex justify-content-center align-items-center mb-4"
-              style="height: 500px;"
-            >
-              <span class="text-muted">[ Shelter-level visualization will load here ]</span>
+            <div class="dropdown mb-4">
+              <button
+                class="btn btn-primary dropdown-toggle"
+                type="button"
+                id="shelterDropdownBtn"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Select Your Shelter
+              </button>
+            
+              <div class="dropdown-menu p-3" style="width: 300px;" aria-labelledby="shelterDropdownBtn">
+                <!-- Search bar inside dropdown -->
+                <input
+                  type="text"
+                  id="shelterSearchInput"
+                  class="form-control mb-2"
+                  placeholder="Search shelters..."
+                />
+            
+                <div id="shelterListContainer" style="max-height: 250px; overflow-y: auto;">
+                  
+                </div>
+            
+                <hr/>
+                <button class="btn btn-sm btn-outline-secondary w-100" id="resetShelterFilter">
+                  Reset to All Shelters
+                </button>
+              </div>
+            </div>
+            
+            <div id="selectedShelterLabel" class="text-muted mb-3">
+              Showing all shelters
+            </div>
+            
+            <!-- Summary carousel -->
+            <div id="shelterCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+              <div class="carousel-inner">
+            
+                <!-- Slide 1: total dogs -->
+                <div class="carousel-item active">
+                  <div class="card text-center">
+                    <div class="card-body">
+                      <h5 class="card-title mb-2">Total Dogs in Selection</h5>
+                      <p class="display-5 mb-0" id="totalDogsCount">0</p>
+                      <p class="text-muted mb-0" id="carouselShelterLabel">All shelters</p>
+                    </div>
+                  </div>
+                </div>
+            
+                <!-- Slide 2: top 3 Found locations -->
+                <div class="carousel-item">
+                  <div class="card">
+                    <div class="card-body">
+                      <h5 class="card-title mb-3">Top 3 Source Locations (Found)</h5>
+                      <ul class="list-group list-group-flush" id="topStatesList">
+                        <!-- JS will insert <li> items here -->
+                      </ul>
+                      <p class="text-muted small mt-2 mb-0">
+                        Based on the <code>Found</code> field in your data.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+            
+              </div>
+            
+              <button class="carousel-control-prev" type="button" data-bs-target="#shelterCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#shelterCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
             </div>
 
+            <!-- Dog Cards Section -->
+            <h4 class="mt-4 mb-3">Dogs in Shelter</h4>
+            <div id="dogCardsContainer" class="row g-3 mb-3"></div>
+            <div id="dogCardsPager" class="d-flex justify-content-end align-items-center gap-2 mb-5"></div>
+            
+            <section class="mb-4">
+              <h4 class="mt-3 mb-2">Breed Composition</h4>
+              <div id="breedBarChartContainer" class="border rounded bg-white p-3">
+                <svg id="breedBarChart" width="100%" height="320"></svg>
+              </div>
+            </section>
+
+            <section class="mb-4">
+              <h4 class="mt-3 mb-2">Breed Similarity Network</h4>
+              <div id="breedForceContainer" class="border rounded bg-white p-3">
+                <svg id="breedForce" width="100%" height="360"></svg>
+              </div>
+            </section>
+            
+
+            <section class="mb-4">
+              <h4 class="mt-3 mb-2">Dog Origins Flow</h4>
+              <div id="originSankeyContainer" class="border rounded bg-white p-3">
+                <svg id="originSankey" width="100%" height="320"></svg>
+              </div>
+            </section>
+            
             <!-- D3 table will be injected here -->
             <div id="state-table"></div>
+            
           </section>
         </main>
       </div> <!-- /.row -->
@@ -172,16 +269,19 @@
 
     <!-- D3 -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- D3 Sankey plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+
 
     <script>
-      // all_travel here is the Python list we passed in render_template
-      window.all_travel = {{ all_travel | tojson }};
-      window.instate_travel = {{ instate_travel | tojson }};
-      window.outstate_travel = {{ outstate_travel | tojson }};
+      window.shelter_data = {{ shelter_data | tojson }};
+      // Base folder for dog images
+      window.dog_image_base = "{{ url_for('static', filename='images') }}/";
     </script>
-
-    <!-- Your JS with d3TableWithControls/init logic -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Use shelter.js, not main.js, for this dashboard -->
+    <script src="{{ url_for('static', filename='js/shelter.js') }}"></script>
+    
   </body>
 </html>
 

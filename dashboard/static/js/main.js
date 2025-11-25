@@ -1,5 +1,3 @@
-// static/js/main.js
-
 document.addEventListener("DOMContentLoaded", () => {
   const stateTableEl = document.getElementById("state-table");
 
@@ -309,3 +307,4 @@ function d3TableWithControls(
   update();
   return root.node();
 }
+
