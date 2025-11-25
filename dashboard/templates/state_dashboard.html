@@ -289,14 +289,14 @@
                 <div class="observable-row">
                   <div class="observable-panel">
                     <h4 class="chart-subtitle">Flow Map</h4>
-                    <div id="observablehq-flowMap-6a33d79e"></div>
+                    <div id="observablehq-flowMap-00c503e1"></div>
                   </div>
                   <div class="observable-panel">
                     <h4 class="chart-subtitle">Partner States Network</h4>
                     <div id="observablehq-partnerStatesOnly-6a33d79e"></div>
                   </div>
                 </div>
-
+                
                 <!-- Out-of-state demographics -->
                 <h3 class="section-title">Out-of-State Dog Demographics</h3>
                 <div class="observable-row">
@@ -404,7 +404,7 @@
           />
           <script type="module">
             import {Runtime, Inspector} from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@5/dist/runtime.js";
-            import define from "https://api.observablehq.com/d/a4c869afa6166459@489.js?v=4";
+            import define from "https://api.observablehq.com/d/a4c869afa6166459@505.js?v=4";
 
             new Runtime().module(define, name => {
               if (name === "viewof flowMode")
@@ -415,7 +415,7 @@
               if (name === "partnerStatesOnly")
                 return new Inspector(document.querySelector("#observablehq-partnerStatesOnly-6a33d79e"));
               if (name === "flowMap")
-                return new Inspector(document.querySelector("#observablehq-flowMap-6a33d79e"));
+                return new Inspector(document.querySelector("#observablehq-flowMap-00c503e1"));
 
               if (name === "scatter_pies3")
                 return new Inspector(document.querySelector("#observablehq-scatter_pies3-6a33d79e"));
