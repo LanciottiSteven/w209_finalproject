@@ -83,7 +83,7 @@
 
       /* ===== Global readability tweaks ===== */
       body {
-        font-size: 1.05rem; /* slightly larger base font */
+        font-size: 1.05rem;
         background-color: #f3f4f6;
         color: #111827;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -125,25 +125,25 @@
       }
 
       .section-banner h2 {
-        font-size: 1.5rem; /* was 1.4rem */
+        font-size: 1.5rem;
         margin: 0 0 0.25rem;
       }
 
       .section-banner p {
         margin: 0;
         color: #4b5563;
-        font-size: 1rem; /* was 0.95rem */
+        font-size: 1rem;
       }
 
       .section-title {
         margin-top: 1.5rem;
         margin-bottom: 0.75rem;
-        font-size: 1.25rem; /* was 1.15rem */
+        font-size: 1.25rem;
         font-weight: 600;
       }
 
       .chart-subtitle {
-        font-size: 1.05rem; /* was 1rem */
+        font-size: 1.05rem;
         font-weight: 600;
         margin-bottom: 0.75rem;
       }
@@ -176,18 +176,9 @@
         margin-top: 0.25rem;
       }
 
-      /* --- Overall dashboard layout: sticky filters on left, content on right --- */
+      /* --- Overall dashboard layout --- */
       .dashboard-layout {
-        display: flex;
-        gap: 1.5rem;
-        align-items: flex-start;
-      }
-
-      .filters-panel {
-        position: sticky;
-        top: 60px; /* keeps it under the navbar */
-        flex: 0 0 280px; /* fixed-ish width */
-        max-width: 320px;
+        display: block;
       }
 
       .content-column {
@@ -195,24 +186,73 @@
         min-width: 0;
       }
 
-      /* ===== Partner States Network: more legible, lighter bg, bigger states ===== */
+      /* ===== Sticky filters as a thin header bar ===== */
+      .filters-panel {
+        position: sticky;
+        top: 64px; /* under navbar */
+        z-index: 5;
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+
+        box-sizing: border-box;
+      }
+
+      .filters-panel.observable-panel {
+        padding: 0.4rem 0.9rem;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+      }
+
+      .filters-panel h4.chart-subtitle {
+        margin: 0;
+        font-size: 0.95rem;
+        white-space: nowrap;
+      }
+
+      .filters-panel > div[id^="observablehq-"] {
+        margin-top: 0;
+      }
+
+      .filters-panel select,
+      .filters-panel input,
+      .filters-panel button {
+        font-size: 0.85rem !important;
+      }
+
+      /* ===== Partner States Network panel – reverted sizing, better colors/fonts ===== */
       .partner-panel {
-        overflow-x: hidden; /* no horizontal scroll for this panel */
         background: #f9fafb;
         border-color: #e5e7eb;
       }
 
-      .partner-panel svg {
-        width: 100% !important;
-        height: auto !important;
-        /* we do extra scaling via JS so it centers nicely */
+      #observablehq-partnerStatesOnly-6a33d79e svg {
+        background-color: #f5f5f5 !important;
       }
 
-      .partner-panel text {
+      #observablehq-partnerStatesOnly-6a33d79e text {
         font-size: 1rem !important;
         fill: #111827 !important;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
           sans-serif !important;
+      }
+
+      /* Flow map: light background too */
+      #observablehq-flowMap-00c503e1 svg {
+        background-color: #f5f5f5 !important;
+      }
+      #observablehq-flowMap-00c503e1 svg rect {
+        fill: #f5f5f5 !important;
       }
 
       /* Tableau container at the bottom */
@@ -286,7 +326,7 @@
             <h1 class="h2 mb-0">State Representative Dashboard</h1>
           </div>
 
-          <!-- Simple overview text at top -->
+          <!-- Overview -->
           <section class="viz-section">
             <div class="page-header">
               <h2>Overview</h2>
@@ -310,7 +350,7 @@
             </p>
           </section>
 
-          <!-- Big section: sticky filters on left, all Observable charts on right -->
+          <!-- State-level analysis -->
           <section class="viz-section">
             <div class="section-banner">
               <h2>State-Level Analysis</h2>
@@ -325,14 +365,10 @@
             </div>
 
             <div class="dashboard-layout">
-              <!-- Main content column -->
               <div class="content-column">
-                <!-- Sticky filters element -->
-                <aside
-                  style="outline: 5px solid black; z-index: 2"
-                  class="observable-panel filters-panel"
-                >
-                  <h4 class="chart-subtitle">State Filters</h4>
+                <!-- Sticky filter header -->
+                <aside class="observable-panel filters-panel">
+                  <h4 class="chart-subtitle mb-0">State Filters</h4>
                   <div id="observablehq-viewof-flowMode-6a33d79e"></div>
                   <div id="observablehq-viewof-state-6a33d79e"></div>
                 </aside>
@@ -397,7 +433,7 @@
             </div>
           </section>
 
-          <!-- Tableau section at the very end -->
+          <!-- Tableau section -->
           <section class="viz-section">
             <div class="section-banner">
               <h2>Overall State Movement (Tableau)</h2>
@@ -463,7 +499,7 @@
                   divElement.getElementsByTagName("object")[0];
                 vizElement.style.width = "100%";
                 vizElement.style.height =
-                  divElement.offsetWidth * 0.4 + "px"; // you can bump to 0.5 if you want it taller
+                  divElement.offsetWidth * 0.4 + "px";
                 var scriptElement = document.createElement("script");
                 scriptElement.src =
                   "https://public.tableau.com/javascripts/api/viz_v1.js";
@@ -551,9 +587,7 @@
           </script>
         </main>
       </div>
-      <!-- /.row -->
     </div>
-    <!-- /.container-fluid -->
 
     <!-- Bootstrap JS bundle via CDN -->
     <script
@@ -573,48 +607,5 @@
 
     <!-- Your JS with d3TableWithControls/init logic -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-
-    <!-- Partner map legibility tweaks: scale states + bigger, darker labels -->
-    <script>
-      function tweakPartnerMap() {
-        const container = document.querySelector(
-          "#observablehq-partnerStatesOnly-6a33d79e"
-        );
-        if (!container) return;
-        const svg = container.querySelector("svg");
-        if (!svg) return;
-
-        // Make sure it fills the card and is scaled up
-        svg.style.width = "100%";
-        svg.style.height = "auto";
-        svg.style.transform = "scale(1.35)";
-        svg.style.transformOrigin = "50% 40%";
-
-        // Clean, dark, readable text
-        const texts = svg.querySelectorAll("text");
-        texts.forEach((t) => {
-          t.style.fontSize = "16px";
-          t.style.fill = "#111827";
-          t.style.fontFamily =
-            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-        });
-      }
-
-      // Observe for when Observable renders the map
-      const partnerContainer = document.getElementById(
-        "observablehq-partnerStatesOnly-6a33d79e"
-      );
-      if (partnerContainer) {
-        const observer = new MutationObserver(() => {
-          tweakPartnerMap();
-        });
-        observer.observe(partnerContainer, {
-          childList: true,
-          subtree: true
-        });
-      }
-
-      window.addEventListener("load", tweakPartnerMap);
-    </script>
   </body>
 </html>
