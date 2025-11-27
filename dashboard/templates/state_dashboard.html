@@ -167,7 +167,7 @@
 
       .filters-panel {
         position: sticky;
-        top: 90px;         /* keeps it under the navbar */
+        top: 60px;         /* keeps it under the navbar */
         flex: 0 0 280px;   /* fixed-ish width */
         max-width: 320px;
       }
@@ -278,15 +278,14 @@
             </div>
 
             <div class="dashboard-layout">
-              <!-- Sticky filters column -->
-              <aside class="observable-panel filters-panel">
-                <h4 class="chart-subtitle">State Filters</h4>
-                <div id="observablehq-viewof-flowMode-6a33d79e"></div>
-                <div id="observablehq-viewof-state-6a33d79e"></div>
-              </aside>
-
               <!-- Main content column -->
               <div class="content-column">
+                <!-- Sticky filters element -->
+                <aside style="outline: 5px solid black; z-index: 2" class="observable-panel filters-panel">
+                  <h4 class="chart-subtitle">State Filters</h4>
+                  <div id="observablehq-viewof-flowMode-6a33d79e"></div>
+                  <div id="observablehq-viewof-state-6a33d79e"></div>
+                </aside>
                 <!-- State-level flows -->
                 <h3 class="section-title">Dog Movement Across States</h3>
                 <div class="observable-row">
