@@ -81,6 +81,23 @@
         -webkit-overflow-scrolling: touch;
       }
 
+      /* ===== Global readability tweaks ===== */
+      body {
+        font-size: 1.05rem; /* slightly larger base font */
+        background-color: #f3f4f6;
+        color: #111827;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        letter-spacing: 0.01em;
+        color: #111827;
+      }
+
       /* --- Layout & banners for viz sections --- */
       main {
         padding-top: 1.5rem;
@@ -108,25 +125,25 @@
       }
 
       .section-banner h2 {
-        font-size: 1.4rem;
+        font-size: 1.5rem; /* was 1.4rem */
         margin: 0 0 0.25rem;
       }
 
       .section-banner p {
         margin: 0;
         color: #4b5563;
-        font-size: 0.95rem;
+        font-size: 1rem; /* was 0.95rem */
       }
 
       .section-title {
         margin-top: 1.5rem;
         margin-bottom: 0.75rem;
-        font-size: 1.15rem;
+        font-size: 1.25rem; /* was 1.15rem */
         font-weight: 600;
       }
 
       .chart-subtitle {
-        font-size: 1rem;
+        font-size: 1.05rem; /* was 1rem */
         font-weight: 600;
         margin-bottom: 0.75rem;
       }
@@ -146,7 +163,7 @@
 
       .observable-panel {
         flex: 1 1 0;
-        min-width: 340px;
+        min-width: 320px;
         background: #ffffff;
         border-radius: 0.75rem;
         border: 1px solid #e5e7eb;
@@ -168,14 +185,34 @@
 
       .filters-panel {
         position: sticky;
-        top: 60px;         /* keeps it under the navbar */
-        flex: 0 0 280px;   /* fixed-ish width */
+        top: 60px; /* keeps it under the navbar */
+        flex: 0 0 280px; /* fixed-ish width */
         max-width: 320px;
       }
 
       .content-column {
         flex: 1 1 auto;
         min-width: 0;
+      }
+
+      /* ===== Partner States Network: more legible, lighter bg, bigger states ===== */
+      .partner-panel {
+        overflow-x: hidden; /* no horizontal scroll for this panel */
+        background: #f9fafb;
+        border-color: #e5e7eb;
+      }
+
+      .partner-panel svg {
+        width: 100% !important;
+        height: auto !important;
+        /* we do extra scaling via JS so it centers nicely */
+      }
+
+      .partner-panel text {
+        font-size: 1rem !important;
+        fill: #111827 !important;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif !important;
       }
 
       /* Tableau container at the bottom */
@@ -218,7 +255,8 @@
             <ul class="nav flex-column">
               <li class="nav-item">
                 <p class="px-3 small text-muted">
-                  Explore how dogs move between states and shelters using the following dashboards.
+                  Explore how dogs move between states and shelters using the
+                  following dashboards.
                 </p>
                 <a
                   class="nav-link {% if active_page == 'state' %}active{% endif %}"
@@ -253,18 +291,22 @@
             <div class="page-header">
               <h2>Overview</h2>
               <p>
-                The charts below provide information about rescue dog movement in the United States. Demographics and shelter organization visualizations will be generated based on your selections.
+                The charts below provide information about rescue dog movement
+                in the United States. Demographics and shelter organization
+                visualizations will be generated based on your selections.
               </p>
               <p>
-                Use the filters and visualizations below to explore how dogs move into, out of,
-                and within each state. Compare partner networks, demographic patterns, and
-                in-state organization activity.
+                Use the filters and visualizations below to explore how dogs
+                move into, out of, and within each state. Compare partner
+                networks, demographic patterns, and in-state organization
+                activity.
               </p>
             </div>
 
             <p class="lead mb-0">
-              Start by picking a flow direction and state. The panels on the right will update
-              as you scroll to show complementary views of the same movement patterns. Try finding your state!
+              Start by picking a flow direction and state. The panels on the
+              right will update as you scroll to show complementary views of the
+              same movement patterns. Try finding your state!
             </p>
           </section>
 
@@ -273,8 +315,12 @@
             <div class="section-banner">
               <h2>State-Level Analysis</h2>
               <p>
-                Choose ‘into state’ if you are interested in seeing where dogs are coming from, or choose ‘out of state’ to see where they are going. Then select the state you are interested in from the drop-down list. The dog movement across states, out-of-state demographics, and in-shelter activity will update based on your selections.
-
+                Choose ‘into state’ if you are interested in seeing where dogs
+                are coming from, or choose ‘out of state’ to see where they are
+                going. Then select the state you are interested in from the
+                drop-down list. The dog movement across states, out-of-state
+                demographics, and in-shelter activity will update based on your
+                selections.
               </p>
             </div>
 
@@ -282,11 +328,15 @@
               <!-- Main content column -->
               <div class="content-column">
                 <!-- Sticky filters element -->
-                <aside style="outline: 5px solid black; z-index: 2" class="observable-panel filters-panel">
+                <aside
+                  style="outline: 5px solid black; z-index: 2"
+                  class="observable-panel filters-panel"
+                >
                   <h4 class="chart-subtitle">State Filters</h4>
                   <div id="observablehq-viewof-flowMode-6a33d79e"></div>
                   <div id="observablehq-viewof-state-6a33d79e"></div>
                 </aside>
+
                 <!-- State-level flows -->
                 <h3 class="section-title">Dog Movement Across States</h3>
                 <div class="observable-row">
@@ -294,12 +344,12 @@
                     <h4 class="chart-subtitle">Flow Map</h4>
                     <div id="observablehq-flowMap-00c503e1"></div>
                   </div>
-                  <div class="observable-panel">
+                  <div class="observable-panel partner-panel">
                     <h4 class="chart-subtitle">Partner States Network</h4>
                     <div id="observablehq-partnerStatesOnly-6a33d79e"></div>
                   </div>
                 </div>
-                
+
                 <!-- Out-of-state demographics -->
                 <h3 class="section-title">Out-of-State Dog Demographics</h3>
                 <div class="observable-row">
@@ -321,7 +371,9 @@
                 <h3 class="section-title">In-State Shelter Activity</h3>
                 <div class="observable-row">
                   <div class="observable-panel">
-                    <h4 class="chart-subtitle">In-State Dogs per Organization</h4>
+                    <h4 class="chart-subtitle">
+                      In-State Dogs per Organization
+                    </h4>
                     <div id="observablehq-hist_instate_by_org-6a33d79e"></div>
                   </div>
                   <div class="observable-panel">
@@ -334,7 +386,11 @@
                 <hr class="section-divider" />
                 <h3 class="section-title">Raw Records (Interactive Table)</h3>
                 <p class="text-muted mb-3">
-                  The table below contains records of dog movement. For each record, Found State shows where the dog originated, while the Contact State will show where it moved to. Please note, some dogs may have moved more than once. Please use the filters to help guide your search.
+                  The table below contains records of dog movement. For each
+                  record, Found State shows where the dog originated, while the
+                  Contact State will show where it moved to. Please note, some
+                  dogs may have moved more than once. Please use the filters to
+                  help guide your search.
                 </p>
                 <div id="state-table"></div>
               </div>
@@ -346,8 +402,8 @@
             <div class="section-banner">
               <h2>Overall State Movement (Tableau)</h2>
               <p>
-                This Tableau view provides a high-level look at total dog movement by state,
-                complementing the interactive analysis above.
+                This Tableau view provides a high-level look at total dog
+                movement by state, complementing the interactive analysis above.
               </p>
             </div>
 
@@ -356,45 +412,65 @@
               class="border rounded bg-light mb-4"
             >
               <p class="text-muted small mb-2">
-                Tip: hover a state to see total movements; use the toolbar for basic interactions.
+                Tip: hover a state to see total movements; use the toolbar for
+                basic interactions.
               </p>
 
-              <div class='tableauPlaceholder' id='viz1763243454031' style='position: relative'>
+              <div
+                class="tableauPlaceholder"
+                id="viz1763243454031"
+                style="position: relative"
+              >
                 <noscript>
-                  <a href='#'>
+                  <a href="#">
                     <img
-                      alt='Total Movement by State'
-                      src='https://public.tableau.com/static/images/To/TotalMovementbyState/Sheet1/1_rss.png'
-                      style='border: none'
+                      alt="Total Movement by State"
+                      src="https://public.tableau.com/static/images/To/TotalMovementbyState/Sheet1/1_rss.png"
+                      style="border: none"
                     />
                   </a>
                 </noscript>
-                <object class='tableauViz' style='display:none;'>
-                  <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
-                  <param name='embed_code_version' value='3' />
-                  <param name='site_root' value='' />
-                  <param name='name' value='TotalMovementbyState&#47;Sheet1' />
-                  <param name='tabs' value='no' />
-                  <param name='toolbar' value='yes' />
-                  <param name='static_image'
-                         value='https://public.tableau.com/static/images/To/TotalMovementbyState/Sheet1/1.png' />
-                  <param name='animate_transition' value='yes' />
-                  <param name='display_static_image' value='yes' />
-                  <param name='display_spinner' value='yes' />
-                  <param name='display_overlay' value='yes' />
-                  <param name='display_count' value='yes' />
-                  <param name='language' value='en-US' />
-                  <param name='filter' value='publish=yes' />
+                <object class="tableauViz" style="display: none">
+                  <param
+                    name="host_url"
+                    value="https%3A%2F%2Fpublic.tableau.com%2F"
+                  />
+                  <param name="embed_code_version" value="3" />
+                  <param name="site_root" value="" />
+                  <param
+                    name="name"
+                    value="TotalMovementbyState&#47;Sheet1"
+                  />
+                  <param name="tabs" value="no" />
+                  <param name="toolbar" value="yes" />
+                  <param
+                    name="static_image"
+                    value="https://public.tableau.com/static/images/To/TotalMovementbyState/Sheet1/1.png"
+                  />
+                  <param name="animate_transition" value="yes" />
+                  <param name="display_static_image" value="yes" />
+                  <param name="display_spinner" value="yes" />
+                  <param name="display_overlay" value="yes" />
+                  <param name="display_count" value="yes" />
+                  <param name="language" value="en-US" />
+                  <param name="filter" value="publish=yes" />
                 </object>
               </div>
-              <script type='text/javascript'>
-                var divElement = document.getElementById('viz1763243454031');
-                var vizElement = divElement.getElementsByTagName('object')[0];
-                vizElement.style.width = '100%';
-                vizElement.style.height = (divElement.offsetWidth * 0.4) + 'px'; // shorter
-                var scriptElement = document.createElement('script');
-                scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
-                vizElement.parentNode.insertBefore(scriptElement, vizElement);
+              <script type="text/javascript">
+                var divElement =
+                  document.getElementById("viz1763243454031");
+                var vizElement =
+                  divElement.getElementsByTagName("object")[0];
+                vizElement.style.width = "100%";
+                vizElement.style.height =
+                  divElement.offsetWidth * 0.4 + "px"; // you can bump to 0.5 if you want it taller
+                var scriptElement = document.createElement("script");
+                scriptElement.src =
+                  "https://public.tableau.com/javascripts/api/viz_v1.js";
+                vizElement.parentNode.insertBefore(
+                  scriptElement,
+                  vizElement
+                );
               </script>
             </div>
           </section>
@@ -405,36 +481,79 @@
             href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@5/dist/inspector.css"
           />
           <script type="module">
-            import {Runtime, Inspector} from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@5/dist/runtime.js";
+            import {
+              Runtime,
+              Inspector
+            } from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@5/dist/runtime.js";
             import define from "https://api.observablehq.com/d/a4c869afa6166459@505.js?v=4";
 
-            new Runtime().module(define, name => {
+            new Runtime().module(define, (name) => {
               if (name === "viewof flowMode")
-                return new Inspector(document.querySelector("#observablehq-viewof-flowMode-6a33d79e"));
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-viewof-flowMode-6a33d79e"
+                  )
+                );
               if (name === "viewof state")
-                return new Inspector(document.querySelector("#observablehq-viewof-state-6a33d79e"));
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-viewof-state-6a33d79e"
+                  )
+                );
 
               if (name === "partnerStatesOnly")
-                return new Inspector(document.querySelector("#observablehq-partnerStatesOnly-6a33d79e"));
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-partnerStatesOnly-6a33d79e"
+                  )
+                );
               if (name === "flowMap")
-                return new Inspector(document.querySelector("#observablehq-flowMap-00c503e1"));
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-flowMap-00c503e1"
+                  )
+                );
 
               if (name === "scatter_pies3")
-                return new Inspector(document.querySelector("#observablehq-scatter_pies3-6a33d79e"));
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-scatter_pies3-6a33d79e"
+                  )
+                );
               if (name === "scatter_pies2")
-                return new Inspector(document.querySelector("#observablehq-scatter_pies2-6a33d79e"));
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-scatter_pies2-6a33d79e"
+                  )
+                );
 
               if (name === "hist_instate_by_org")
-                return new Inspector(document.querySelector("#observablehq-hist_instate_by_org-6a33d79e"));
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-hist_instate_by_org-6a33d79e"
+                  )
+                );
               if (name === "scatter_pies4")
-                return new Inspector(document.querySelector("#observablehq-scatter_pies4-6a33d79e"));
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-scatter_pies4-6a33d79e"
+                  )
+                );
 
-              return ["dogTrips","stateColor","partnersData","stateColorLegend","partnerGeom"].includes(name);
+              return [
+                "dogTrips",
+                "stateColor",
+                "partnersData",
+                "stateColorLegend",
+                "partnerGeom"
+              ].includes(name);
             });
           </script>
         </main>
-      </div> <!-- /.row -->
-    </div> <!-- /.container-fluid -->
+      </div>
+      <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
 
     <!-- Bootstrap JS bundle via CDN -->
     <script
@@ -454,5 +573,48 @@
 
     <!-- Your JS with d3TableWithControls/init logic -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- Partner map legibility tweaks: scale states + bigger, darker labels -->
+    <script>
+      function tweakPartnerMap() {
+        const container = document.querySelector(
+          "#observablehq-partnerStatesOnly-6a33d79e"
+        );
+        if (!container) return;
+        const svg = container.querySelector("svg");
+        if (!svg) return;
+
+        // Make sure it fills the card and is scaled up
+        svg.style.width = "100%";
+        svg.style.height = "auto";
+        svg.style.transform = "scale(1.35)";
+        svg.style.transformOrigin = "50% 40%";
+
+        // Clean, dark, readable text
+        const texts = svg.querySelectorAll("text");
+        texts.forEach((t) => {
+          t.style.fontSize = "16px";
+          t.style.fill = "#111827";
+          t.style.fontFamily =
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+        });
+      }
+
+      // Observe for when Observable renders the map
+      const partnerContainer = document.getElementById(
+        "observablehq-partnerStatesOnly-6a33d79e"
+      );
+      if (partnerContainer) {
+        const observer = new MutationObserver(() => {
+          tweakPartnerMap();
+        });
+        observer.observe(partnerContainer, {
+          childList: true,
+          subtree: true
+        });
+      }
+
+      window.addEventListener("load", tweakPartnerMap);
+    </script>
   </body>
 </html>
