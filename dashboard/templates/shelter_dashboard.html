@@ -80,6 +80,148 @@
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
       }
+
+      /* ===== Global readability tweaks ===== */
+      body {
+        font-size: 1.05rem; /* slightly larger base font */
+        background-color: #f3f4f6;
+        color: #111827;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        letter-spacing: 0.01em;
+        color: #111827;
+      }
+
+      /* --- Layout & banners for viz sections --- */
+      main {
+        padding-top: 1.5rem;
+        padding-bottom: 3rem;
+      }
+
+      .viz-section {
+        padding: 1.75rem 0 2.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+      }
+
+      .viz-section:last-of-type {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .section-banner {
+        background: #f8fafc;
+        border-left: 4px solid #0d6efd;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .section-banner h2 {
+        font-size: 1.5rem; /* was 1.4rem */
+        margin: 0 0 0.25rem;
+      }
+
+      .section-banner p {
+        margin: 0;
+        color: #4b5563;
+        font-size: 1rem; /* was 0.95rem */
+      }
+
+      .section-title {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 1.25rem; /* was 1.15rem */
+        font-weight: 600;
+      }
+
+      .chart-subtitle {
+        font-size: 1.05rem; /* was 1rem */
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+      }
+
+      .section-divider {
+        margin: 2rem 0;
+        border-color: #e5e7eb;
+      }
+
+      /* --- Observable layout helpers --- */
+      .observable-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 1.75rem;
+      }
+
+      .observable-panel {
+        flex: 1 1 0;
+        min-width: 320px;
+        background: #ffffff;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        padding: 1rem 1.25rem 1.25rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        overflow-x: auto;
+      }
+
+      .observable-panel > div[id^="observablehq-"] {
+        margin-top: 0.25rem;
+      }
+
+      /* --- Overall dashboard layout: sticky filters on left, content on right --- */
+      .dashboard-layout {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+      }
+
+      .filters-panel {
+        position: sticky;
+        top: 60px; /* keeps it under the navbar */
+        flex: 0 0 280px; /* fixed-ish width */
+        max-width: 320px;
+      }
+
+      .content-column {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      /* ===== Partner States Network: more legible, lighter bg, bigger states ===== */
+      .partner-panel {
+        overflow-x: hidden; /* no horizontal scroll for this panel */
+        background: #f9fafb;
+        border-color: #e5e7eb;
+      }
+
+      .partner-panel svg {
+        width: 100% !important;
+        height: auto !important;
+        /* we do extra scaling via JS so it centers nicely */
+      }
+
+      .partner-panel text {
+        font-size: 1rem !important;
+        fill: #111827 !important;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif !important;
+      }
+
+      /* Tableau container at the bottom */
+      #state-tableau-container {
+        position: relative;
+        padding: 0.75rem;
+        max-width: 900px;
+        margin: 0 auto;
+      }
     </style>
   </head>
 
@@ -112,8 +254,9 @@
           <div class="position-sticky pt-3 sidebar-sticky">
             <ul class="nav flex-column">
               <li class="nav-item">
-                <p>
-                  Explore how dogs move between states and shelters using the following dashboards.
+                <p class="px-3 small text-muted">
+                  Explore how dogs move between states and shelters using the
+                  following dashboards.
                 </p>
                 <a
                   class="nav-link {% if active_page == 'state' %}active{% endif %}"
@@ -138,140 +281,279 @@
         <!-- Main content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
           <div
-            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
+            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
           >
-            <h1 class="h2">Animal Shelter Dashboard</h1>
+            <h1 class="h2 mb-0">State Representative Dashboard</h1>
           </div>
 
-          <!-- State-level chart(s) go here -->
-          <section class="mb-5">
-            <h2>Overview</h2>
-            <p class="lead">
-                The charts below provide information about shelter-level performance, intake, and adoption trends. These should inform local needs and opportunities based on your selections. Please begin by selecting a shelter in the drop-down list below.
-            </p>
-            <div class="dropdown mb-4">
-              <button
-                class="btn btn-primary dropdown-toggle"
-                type="button"
-                id="shelterDropdownBtn"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                Select Your Shelter
-              </button>
-            
-              <div class="dropdown-menu p-3" style="width: 300px;" aria-labelledby="shelterDropdownBtn">
-                <!-- Search bar inside dropdown -->
-                <input
-                  type="text"
-                  id="shelterSearchInput"
-                  class="form-control mb-2"
-                  placeholder="Search shelters..."
-                />
-            
-                <div id="shelterListContainer" style="max-height: 250px; overflow-y: auto;">
-                  
-                </div>
-            
-                <hr/>
-                <button class="btn btn-sm btn-outline-secondary w-100" id="resetShelterFilter">
-                  Reset to All Shelters
-                </button>
-              </div>
-            </div>
-            
-            <div id="selectedShelterLabel" class="text-muted mb-3">
-              Showing all shelters
-            </div>
-            
-            <!-- Summary carousel -->
-            <div id="shelterCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
-              <div class="carousel-inner">
-            
-                <!-- Slide 1: total dogs -->
-                <div class="carousel-item active">
-                  <div class="card text-center">
-                    <div class="card-body">
-                      <h5 class="card-title mb-2">Total Dogs in Selection</h5>
-                      <p class="display-5 mb-0" id="totalDogsCount">0</p>
-                      <p class="text-muted mb-0" id="carouselShelterLabel">All shelters</p>
-                    </div>
-                  </div>
-                </div>
-            
-                <!-- Slide 2: top 3 Found locations -->
-                <div class="carousel-item">
-                  <div class="card">
-                    <div class="card-body">
-                      <h5 class="card-title mb-3">Top 3 Source Locations (Found)</h5>
-                      <ul class="list-group list-group-flush" id="topStatesList">
-                        <!-- JS will insert <li> items here -->
-                      </ul>
-                      <p class="text-muted small mt-2 mb-0">
-                        Based on the <code>Found</code> field in your data.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-            
-              </div>
-            
-              <button class="carousel-control-prev" type="button" data-bs-target="#shelterCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-              </button>
-              <button class="carousel-control-next" type="button" data-bs-target="#shelterCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-              </button>
-            </div>
-
-            <!-- Dog Cards Section -->
-            <h4 class="mt-4 mb-3">Dogs in Shelter</h4>
-            <p>
-              Hover over the images below to get to know each dog a little better.
-            </p>
-            <div id="dogCardsContainer" class="row g-3 mb-3"></div>
-            <div id="dogCardsPager" class="d-flex justify-content-end align-items-center gap-2 mb-5"></div>
-            
-            <section class="mb-4">
-              <h4 class="mt-3 mb-2">Breed Composition</h4>
-              <div id="breedBarChartContainer" class="border rounded bg-white p-3">
-                <svg id="breedBarChart" width="100%" height="320"></svg>
-              </div>
-            </section>
-            
-            <section class="mb-4">
-              <h4 class="mt-3 mb-2">Breed Similarity Network</h4>
+          <!-- Simple overview text at top -->
+          <section class="viz-section">
+            <div class="page-header">
+              <h2>Overview</h2>
               <p>
-                The visualization below shows the relationship between dogs found from the same location.
+                The charts below provide information about rescue dog movement
+                in the United States. Demographics and shelter organization
+                visualizations will be generated based on your selections.
               </p>
-              <div id="breedForceContainer" class="border rounded bg-white p-3">
-                <svg id="breedForce" width="100%" height="360"></svg>
-              </div>
-            </section>
-            
+              <p>
+                Use the filters and visualizations below to explore how dogs
+                move into, out of, and within each state. Compare partner
+                networks, demographic patterns, and in-state organization
+                activity.
+              </p>
+            </div>
 
-            <section class="mb-4">
-              <h4 class="mt-3 mb-2">Dog Origins Flow</h4>
-              <div id="originSankeyContainer" class="border rounded bg-white p-3">
-                <svg id="originSankey" width="100%" height="320"></svg>
-              </div>
-            </section>
-            
-            <!-- D3 table will be injected here -->
-             <h2>
-              Raw Records (Interactive Table)
-             </h2>
-             <p>
-              The table below contains records of dog movement. For each record, Found State shows where the dog originated, while the Contact State will show where it moved to. Please note, some dogs may have moved more than once. Please use the filters to help guide your search. Navigate to the shelter email and shelter phone fields for contact information. 
-             </p>
-            <div id="state-table"></div>
-            
+            <p class="lead mb-0">
+              Start by picking a flow direction and state. The panels on the
+              right will update as you scroll to show complementary views of the
+              same movement patterns. Try finding your state!
+            </p>
           </section>
+
+          <!-- Big section: sticky filters on left, all Observable charts on right -->
+          <section class="viz-section">
+            <div class="section-banner">
+              <h2>State-Level Analysis</h2>
+              <p>
+                Choose ‘into state’ if you are interested in seeing where dogs
+                are coming from, or choose ‘out of state’ to see where they are
+                going. Then select the state you are interested in from the
+                drop-down list. The dog movement across states, out-of-state
+                demographics, and in-shelter activity will update based on your
+                selections.
+              </p>
+            </div>
+
+            <div class="dashboard-layout">
+              <!-- Main content column -->
+              <div class="content-column">
+                <!-- Sticky filters element -->
+                <aside
+                  style="outline: 5px solid black; z-index: 2"
+                  class="observable-panel filters-panel"
+                >
+                  <h4 class="chart-subtitle">State Filters</h4>
+                  <div id="observablehq-viewof-flowMode-6a33d79e"></div>
+                  <div id="observablehq-viewof-state-6a33d79e"></div>
+                </aside>
+
+                <!-- State-level flows -->
+                <h3 class="section-title">Dog Movement Across States</h3>
+                <div class="observable-row">
+                  <div class="observable-panel">
+                    <h4 class="chart-subtitle">Flow Map</h4>
+                    <div id="observablehq-flowMap-00c503e1"></div>
+                  </div>
+                  <div class="observable-panel partner-panel">
+                    <h4 class="chart-subtitle">Partner States Network</h4>
+                    <div id="observablehq-partnerStatesOnly-6a33d79e"></div>
+                  </div>
+                </div>
+
+                <!-- Out-of-state demographics -->
+                <h3 class="section-title">Out-of-State Dog Demographics</h3>
+                <div class="observable-row">
+                  <div class="observable-panel">
+                    <h4 class="chart-subtitle">
+                      State Dog Imports (Out-of-State Dogs Entering)
+                    </h4>
+                    <div id="observablehq-scatter_pies3-6a33d79e"></div>
+                  </div>
+                  <div class="observable-panel">
+                    <h4 class="chart-subtitle">
+                      State Dog Exports (Dogs Leaving the State)
+                    </h4>
+                    <div id="observablehq-scatter_pies2-6a33d79e"></div>
+                  </div>
+                </div>
+
+                <!-- In-state activity -->
+                <h3 class="section-title">In-State Shelter Activity</h3>
+                <div class="observable-row">
+                  <div class="observable-panel">
+                    <h4 class="chart-subtitle">
+                      In-State Dogs per Organization
+                    </h4>
+                    <div id="observablehq-hist_instate_by_org-6a33d79e"></div>
+                  </div>
+                  <div class="observable-panel">
+                    <h4 class="chart-subtitle">In-State Demographics</h4>
+                    <div id="observablehq-scatter_pies4-6a33d79e"></div>
+                  </div>
+                </div>
+
+                <!-- Raw records table -->
+                <hr class="section-divider" />
+                <h3 class="section-title">Raw Records (Interactive Table)</h3>
+                <p class="text-muted mb-3">
+                  The table below contains records of dog movement. For each
+                  record, Found State shows where the dog originated, while the
+                  Contact State will show where it moved to. Please note, some
+                  dogs may have moved more than once. Please use the filters to
+                  help guide your search.
+                </p>
+                <div id="state-table"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tableau section at the very end -->
+          <section class="viz-section">
+            <div class="section-banner">
+              <h2>Overall State Movement (Tableau)</h2>
+              <p>
+                This Tableau view provides a high-level look at total dog
+                movement by state, complementing the interactive analysis above.
+              </p>
+            </div>
+
+            <div
+              id="state-tableau-container"
+              class="border rounded bg-light mb-4"
+            >
+              <p class="text-muted small mb-2">
+                Tip: hover a state to see total movements; use the toolbar for
+                basic interactions.
+              </p>
+
+              <div
+                class="tableauPlaceholder"
+                id="viz1763243454031"
+                style="position: relative"
+              >
+                <noscript>
+                  <a href="#">
+                    <img
+                      alt="Total Movement by State"
+                      src="https://public.tableau.com/static/images/To/TotalMovementbyState/Sheet1/1_rss.png"
+                      style="border: none"
+                    />
+                  </a>
+                </noscript>
+                <object class="tableauViz" style="display: none">
+                  <param
+                    name="host_url"
+                    value="https%3A%2F%2Fpublic.tableau.com%2F"
+                  />
+                  <param name="embed_code_version" value="3" />
+                  <param name="site_root" value="" />
+                  <param
+                    name="name"
+                    value="TotalMovementbyState&#47;Sheet1"
+                  />
+                  <param name="tabs" value="no" />
+                  <param name="toolbar" value="yes" />
+                  <param
+                    name="static_image"
+                    value="https://public.tableau.com/static/images/To/TotalMovementbyState/Sheet1/1.png"
+                  />
+                  <param name="animate_transition" value="yes" />
+                  <param name="display_static_image" value="yes" />
+                  <param name="display_spinner" value="yes" />
+                  <param name="display_overlay" value="yes" />
+                  <param name="display_count" value="yes" />
+                  <param name="language" value="en-US" />
+                  <param name="filter" value="publish=yes" />
+                </object>
+              </div>
+              <script type="text/javascript">
+                var divElement =
+                  document.getElementById("viz1763243454031");
+                var vizElement =
+                  divElement.getElementsByTagName("object")[0];
+                vizElement.style.width = "100%";
+                vizElement.style.height =
+                  divElement.offsetWidth * 0.4 + "px"; // you can bump to 0.5 if you want it taller
+                var scriptElement = document.createElement("script");
+                scriptElement.src =
+                  "https://public.tableau.com/javascripts/api/viz_v1.js";
+                vizElement.parentNode.insertBefore(
+                  scriptElement,
+                  vizElement
+                );
+              </script>
+            </div>
+          </section>
+
+          <!-- Observable wiring -->
+          <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@5/dist/inspector.css"
+          />
+          <script type="module">
+            import {
+              Runtime,
+              Inspector
+            } from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@5/dist/runtime.js";
+            import define from "https://api.observablehq.com/d/a4c869afa6166459@505.js?v=4";
+
+            new Runtime().module(define, (name) => {
+              if (name === "viewof flowMode")
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-viewof-flowMode-6a33d79e"
+                  )
+                );
+              if (name === "viewof state")
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-viewof-state-6a33d79e"
+                  )
+                );
+
+              if (name === "partnerStatesOnly")
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-partnerStatesOnly-6a33d79e"
+                  )
+                );
+              if (name === "flowMap")
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-flowMap-00c503e1"
+                  )
+                );
+
+              if (name === "scatter_pies3")
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-scatter_pies3-6a33d79e"
+                  )
+                );
+              if (name === "scatter_pies2")
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-scatter_pies2-6a33d79e"
+                  )
+                );
+
+              if (name === "hist_instate_by_org")
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-hist_instate_by_org-6a33d79e"
+                  )
+                );
+              if (name === "scatter_pies4")
+                return new Inspector(
+                  document.querySelector(
+                    "#observablehq-scatter_pies4-6a33d79e"
+                  )
+                );
+
+              return [
+                "dogTrips",
+                "stateColor",
+                "partnersData",
+                "stateColorLegend",
+                "partnerGeom"
+              ].includes(name);
+            });
+          </script>
         </main>
-      </div> <!-- /.row -->
-    </div> <!-- /.container-fluid -->
+      </div>
+      <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
 
     <!-- Bootstrap JS bundle via CDN -->
     <script
@@ -281,19 +563,58 @@
 
     <!-- D3 -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- D3 Sankey plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
-
 
     <script>
-      window.shelter_data = {{ shelter_data | tojson }};
-      // Base folder for dog images
-      window.dog_image_base = "{{ url_for('static', filename='images') }}/";
+      // all_travel here is the Python list we passed in render_template
+      window.all_travel = {{ all_travel | tojson }};
+      window.instate_travel = {{ instate_travel | tojson }};
+      window.outstate_travel = {{ outstate_travel | tojson }};
     </script>
-    
-    <!-- Use shelter.js, not main.js, for this dashboard -->
-    <script src="{{ url_for('static', filename='js/shelter.js') }}"></script>
-    
+
+    <!-- Your JS with d3TableWithControls/init logic -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- Partner map legibility tweaks: scale states + bigger, darker labels -->
+    <script>
+      function tweakPartnerMap() {
+        const container = document.querySelector(
+          "#observablehq-partnerStatesOnly-6a33d79e"
+        );
+        if (!container) return;
+        const svg = container.querySelector("svg");
+        if (!svg) return;
+
+        // Make sure it fills the card and is scaled up
+        svg.style.width = "100%";
+        svg.style.height = "auto";
+        svg.style.transform = "scale(1.35)";
+        svg.style.transformOrigin = "50% 40%";
+
+        // Clean, dark, readable text
+        const texts = svg.querySelectorAll("text");
+        texts.forEach((t) => {
+          t.style.fontSize = "16px";
+          t.style.fill = "#111827";
+          t.style.fontFamily =
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+        });
+      }
+
+      // Observe for when Observable renders the map
+      const partnerContainer = document.getElementById(
+        "observablehq-partnerStatesOnly-6a33d79e"
+      );
+      if (partnerContainer) {
+        const observer = new MutationObserver(() => {
+          tweakPartnerMap();
+        });
+        observer.observe(partnerContainer, {
+          childList: true,
+          subtree: true
+        });
+      }
+
+      window.addEventListener("load", tweakPartnerMap);
+    </script>
   </body>
 </html>
-
