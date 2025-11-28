@@ -252,6 +252,150 @@
                 <svg id="originSankey" width="100%" height="320"></svg>
               </div>
             </section>
+
+            <!-- User Preference Form for ML Recommender -->
+<section class="mb-4">
+  <h3>Find Your Match</h3>
+  <p class="text-muted small">
+    Tell us a bit about what you’re looking for and we’ll suggest some dogs.
+  </p>
+
+  <form id="matchForm" class="row g-2 align-items-end">
+    <!-- Age -->
+    <div class="col-6 col-md-3">
+      <label for="pref_age" class="form-label mb-1">Age</label>
+      <select class="form-select form-select-sm" id="pref_age" name="age">
+        <option value="">Any</option>
+        <option value="Baby">Baby</option>
+        <option value="Young">Young</option>
+        <option value="Adult">Adult</option>
+        <option value="Senior">Senior</option>
+      </select>
+    </div>
+
+    <!-- Size -->
+    <div class="col-6 col-md-3">
+      <label for="pref_size" class="form-label mb-1">Size</label>
+      <select class="form-select form-select-sm" id="pref_size" name="size">
+        <option value="">Any</option>
+        <option value="Small">Small</option>
+        <option value="Medium">Medium</option>
+        <option value="Large">Large</option>
+        <option value="XLarge">Extra Large</option>
+      </select>
+    </div>
+
+    <!-- Sex -->
+    <div class="col-6 col-md-3">
+      <label for="pref_sex" class="form-label mb-1">Sex</label>
+      <select class="form-select form-select-sm" id="pref_sex" name="sex">
+        <option value="">Any</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+    </div>
+
+    <!-- Coat -->
+    <div class="col-6 col-md-3">
+      <label for="pref_coat" class="form-label mb-1">Coat</label>
+      <select class="form-select form-select-sm" id="pref_coat" name="coat">
+        <option value="">Any</option>
+        <option value="Short">Short</option>
+        <option value="Medium">Medium</option>
+        <option value="Long">Long</option>
+        <option value="Curly">Curly</option>
+        <option value="Long">Wire</option>
+        <option value="Long">Hariless</option>
+      </select>
+    </div>
+
+    <!-- Good with kids -->
+    <div class="col-6 col-md-3">
+      <label class="form-label mb-1">Good with kids</label>
+      <select class="form-select form-select-sm" name="env_children">
+        <option value="">Doesn’t matter</option>
+        <option value="1">Yes</option>
+        <option value="0">No / not sure</option>
+      </select>
+    </div>
+
+    <!-- Good with dogs -->
+    <div class="col-6 col-md-3">
+      <label class="form-label mb-1">Good with other dogs</label>
+      <select class="form-select form-select-sm" name="env_dogs">
+        <option value="">Doesn’t matter</option>
+        <option value="1">Yes</option>
+        <option value="0">No / not sure</option>
+      </select>
+    </div>
+
+    <!-- Good with cats -->
+    <div class="col-6 col-md-3">
+      <label class="form-label mb-1">Good with cats</label>
+      <select class="form-select form-select-sm" name="env_cats">
+        <option value="">Doesn’t matter</option>
+        <option value="1">Yes</option>
+        <option value="0">No / not sure</option>
+      </select>
+    </div>
+
+    <!-- House trained -->
+    <div class="col-6 col-md-3">
+      <label class="form-label mb-1">House trained</label>
+      <select class="form-select form-select-sm" name="house_trained">
+        <option value="">Doesn’t matter</option>
+        <option value="1">Yes</option>
+        <option value="0">No / not sure</option>
+      </select>
+    </div>
+
+    <!-- Special needs -->
+    <div class="col-6 col-md-3">
+      <label class="form-label mb-1">Special needs OK?</label>
+      <select class="form-select form-select-sm" name="special_needs">
+        <option value="">Doesn’t matter</option>
+        <option value="1">Yes</option>
+        <option value="0">Prefer not</option>
+      </select>
+    </div>
+
+    <!-- Mixed breed -->
+    <div class="col-6 col-md-3">
+      <label class="form-label mb-1">Mixed breed OK?</label>
+      <select class="form-select form-select-sm" name="breed_mixed">
+        <option value="">Doesn’t matter</option>
+        <option value="1">Yes</option>
+        <option value="0">Prefer purebred</option>
+      </select>
+    </div>
+
+    <!-- Top N -->
+    <div class="col-6 col-md-2">
+      <label class="form-label mb-1"># Matches</label>
+      <input
+        type="number"
+        min="1"
+        max="50"
+        value="10"
+        class="form-control form-control-sm"
+        name="top_n"
+      />
+    </div>
+
+    <!-- Submit -->
+    <div class="col-12 col-md-2 text-md-end">
+      <button type="submit" class="btn btn-sm btn-primary w-100 mt-2 mt-md-0">
+        Find my dog
+      </button>
+    </div>
+  </form>
+
+  <div id="matchResults" class="mt-3">
+    <p class="text-muted small">
+      Fill out your preferences and click <strong>Find my dog</strong> to see suggested matches.
+    </p>
+  </div>
+</section>
             
             <!-- D3 table will be injected here -->
             <div id="state-table"></div>

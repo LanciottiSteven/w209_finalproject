@@ -44,6 +44,11 @@
 
     const breedForceContainer = document.getElementById("breedForceContainer");
     const breedForceSvgEl = document.getElementById("breedForce");
+
+    // Recommender form elements
+    const matchFormEl = document.getElementById("matchForm");
+    const matchResultsEl = document.getElementById("matchResults");
+
   
     // ---------- BUILD SHELTER LIST ----------
     const shelterMap = new Map();
@@ -920,7 +925,84 @@ rows.forEach((r) => {
         dogCardsPagerEl.appendChild(nextBtn);
       }
     }
-  
+    
+        // ---------- RECOMMENDER RESULTS ----------
+        function renderMatchResults(matches) {
+            if (!matchResultsEl) return;
+      
+            if (!matches || !matches.length) {
+              matchResultsEl.innerHTML = `
+                <div class="alert alert-warning py-2 my-2">
+                  No matches found for those preferences. Try relaxing your criteria.
+                </div>
+              `;
+              return;
+            }
+      
+            const rowsHtml = matches
+              .map((m) => {
+                const simPct = m.similarity != null
+                  ? `${(m.similarity * 100).toFixed(1)}%`
+                  : "–";
+      
+                return `
+                  <tr>
+                    <td>${m.name ?? "Unknown"}</td>
+                    <td>${m.shelter_name ?? "Unknown"}</td>
+                    <td>${m.shelter_address ?? "Unknown"}</td>
+                    <td>${m.breed_primary ?? "Unknown"}</td>
+                    <td>${m.age ?? "Unknown"}</td>
+                    <td>${m.size ?? "Unknown"}</td>
+                    <td>${m.sex ?? "Unknown"}</td>
+                    <td>${m.env_children ?? ""}</td>
+                    <td>${m.env_dogs ?? ""}</td>
+                    <td>${m.env_cats ?? ""}</td>
+                    <td>${m.house_trained ?? ""}</td>
+                    <td>${m.special_needs ?? ""}</td>
+                    <td>${m.kmeans_cluster}</td>
+                    <td>${simPct}</td>
+                  </tr>
+                `;
+              })
+              .join("");
+      
+            matchResultsEl.innerHTML = `
+              <div class="card">
+                <div class="card-header py-2">
+                  <strong>Recommended matches</strong>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Name</th>
+                        <th>Shelter Name</th>
+                        <th>Shelter Address</th>
+                        <th>Breed</th>
+                        <th>Age</th>
+                        <th>Size</th>
+                        <th>Sex</th>
+                        <th>Kids</th>
+                        <th>Dogs</th>
+                        <th>Cats</th>
+                        <th>House trained</th>
+                        <th>Special needs</th>
+                        <th>Group</th>
+                        <th>Similarity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${rowsHtml}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+          }
+      
+
+
+
     // ---------- MAIN DASHBOARD UPDATE ----------
     function updateShelterDashboard(rows, shelterName) {
       renderShelterTable(rows);
@@ -965,6 +1047,80 @@ rows.forEach((r) => {
   
       updateShelterDashboard(rows, shelterName);
     }
+
+        // ---------- RECOMMENDER FORM LOGIC ----------
+        if (matchFormEl && matchResultsEl) {
+            matchFormEl.addEventListener("submit", async (event) => {
+              event.preventDefault();
+      
+              // Keys must match your cat_cols from Python:
+              // ["age", "size", "sex", "coat", "env_children", "breed_mixed",
+              //  "env_dogs", "env_cats", "house_trained", "special_needs"]
+              const formData = new FormData(matchFormEl);
+              const payload = {};
+      
+              const keys = [
+                "age",
+                "size",
+                "sex",
+                "coat",
+                "env_children",
+                "breed_mixed",
+                "env_dogs",
+                "env_cats",
+                "house_trained",
+                "special_needs",
+              ];
+      
+              keys.forEach((k) => {
+                const v = formData.get(k);
+                if (v !== null && v !== "") {
+                  payload[k] = String(v);
+                }
+              });
+      
+              // Top N
+              const topN = formData.get("top_n");
+              if (topN) {
+                payload.top_n = parseInt(topN, 10);
+              }
+      
+              // Optional: show "loading" message
+              matchResultsEl.innerHTML = `
+                <p class="text-muted small">Finding matches…</p>
+              `;
+      
+              try {
+                const resp = await fetch("/api/recommend_dogs", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                });
+      
+                if (!resp.ok) {
+                  console.error("Recommend API error:", resp.status, resp.statusText);
+                  matchResultsEl.innerHTML = `
+                    <div class="alert alert-danger py-2 my-2">
+                      There was a problem finding matches. Please try again.
+                    </div>
+                  `;
+                  return;
+                }
+      
+                const data = await resp.json();
+                console.log("🔍 Recommendation response:", data);
+                renderMatchResults(data.matches || []);
+              } catch (err) {
+                console.error("Recommend request failed:", err);
+                matchResultsEl.innerHTML = `
+                  <div class="alert alert-danger py-2 my-2">
+                    Could not reach the recommendation service.
+                  </div>
+                `;
+              }
+            });
+          }
+      
   
     // ---------- INIT ----------
     renderShelterList("");
