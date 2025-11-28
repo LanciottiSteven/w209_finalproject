@@ -1,6 +1,10 @@
 from flask import Flask, render_template, jsonify
 import pandas as pd
 import altair as alt
+
+import joblib
+from sklearn.metrics.pairwise import cosine_similarity
+
 app = Flask(__name__)
 
 all_travel = pd.read_csv("data/all_travel.csv")
