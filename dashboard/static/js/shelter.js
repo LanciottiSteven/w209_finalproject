@@ -2,6 +2,8 @@
 
 (function () {
     const shelterData = window.shelter_data || [];
+
+    let currentShelterName = "ALL";
   
     console.log("🔍 Incoming shelter_data:", shelterData);
     if (shelterData.length > 0) {
@@ -1027,6 +1029,7 @@ rows.forEach((r) => {
         cardPage = 0;
         selectedBreed = null;
         selectedOrigin = null;
+        currentShelterName = "ALL";
         updateShelterDashboard(shelterData, "ALL");
       });
     }
@@ -1040,6 +1043,7 @@ rows.forEach((r) => {
       cardPage = 0;
       selectedBreed = null;
       selectedOrigin = null;
+      currentShelterName = shelterName;
   
       const rows = shelterData.filter(
         (r) => r[SHELTER_FIELD] === shelterName
@@ -1071,6 +1075,9 @@ rows.forEach((r) => {
                 "house_trained",
                 "special_needs",
               ];
+
+              shelter_name: currentShelterName
+              payload.shelter_name = shelter_name
       
               keys.forEach((k) => {
                 const v = formData.get(k);
