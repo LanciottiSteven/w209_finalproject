@@ -181,7 +181,15 @@
   background: #f7f7f7;
   transform: rotateY(180deg);
   overflow-y: auto;
+  border-radius: 12px;
+  padding: 12px 14px;
+
+  /* Override Bootstrap's d-flex / centering on this element */
+  display: block !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
 }
+
 
 /* Tame the scrollspy block so it doesn't look like a big white banner */
 .scrollspy-example {
