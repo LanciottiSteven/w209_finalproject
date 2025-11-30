@@ -182,3 +182,26 @@
   transform: rotateY(180deg);
   overflow-y: auto;
 }
+
+/* Tame the scrollspy block so it doesn't look like a big white banner */
+.scrollspy-example {
+  background-color: transparent;  /* remove white block */
+  border: none;                   /* no border/shadow */
+  padding: 0;                     /* keep it tight */
+}
+
+main.col-md-9 .border-bottom {
+  margin-top: 0.5rem;
+}
+/* Don't let the carousel itself create a big white band */
+#shelterCarousel {
+  background-color: transparent;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Also keep the inner wrapper transparent */
+#shelterCarousel .carousel-inner {
+  background-color: transparent;
+  padding: 0;
+}
