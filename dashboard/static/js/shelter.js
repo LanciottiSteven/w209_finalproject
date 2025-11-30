@@ -1,8 +1,10 @@
 // static/js/shelter.js
 
+// static/js/shelter.js
+
 (function () {
     const shelterData = window.shelter_data || [];
-
+  
     let currentShelterName = "ALL";
   
     console.log("🔍 Incoming shelter_data:", shelterData);
@@ -20,8 +22,8 @@
   
     const CARDS_PER_PAGE = 12;
     let cardPage = 0;
-    let selectedBreed = null;    // from bar chart
-    let selectedOrigin = null;   // from sankey
+    let selectedBreed = null;
+    let selectedOrigin = null;
   
     // DOM elements
     const shelterListContainer = d3.select("#shelterListContainer");
@@ -43,14 +45,13 @@
   
     const sankeyContainer = document.getElementById("originSankeyContainer");
     const sankeySvgEl = document.getElementById("originSankey");
-
+  
     const breedForceContainer = document.getElementById("breedForceContainer");
     const breedForceSvgEl = document.getElementById("breedForce");
-
+  
     // Recommender form elements
     const matchFormEl = document.getElementById("matchForm");
     const matchResultsEl = document.getElementById("matchResults");
-
   
     // ---------- BUILD SHELTER LIST ----------
     const shelterMap = new Map();
@@ -82,24 +83,10 @@
         .on("click", (_, d) => selectShelter(d.name));
     }
   
-    // ---------- TABLE ----------
+    // ---------- TABLE (now just clears; d3TableWithControls removed) ----------
     function renderShelterTable(rows) {
       if (!stateTableEl) return;
       stateTableEl.innerHTML = "";
-  
-      const tableNode = d3TableWithControls(rows, {
-        searchKey: "name",
-        pageSize: 25,
-        filters: [
-          { key: "age", label: "Age" },
-          { key: "sex", label: "Sex" },
-          { key: "size", label: "Size" },
-          { key: "contact_state", label: "Shelter state" },
-          { key: "breed_primary", label: "Primary breed" },
-        ],
-      });
-  
-      stateTableEl.appendChild(tableNode);
     }
   
     // ---------- CAROUSEL ----------
@@ -154,7 +141,6 @@
       const svg = d3.select(breedChartSvgEl);
       svg.selectAll("*").remove();
   
-      // Apply origin filter ONLY for the bar chart (if any)
       let rows = baseRows;
       if (selectedOrigin) {
         rows = rows.filter((d) => {
@@ -213,7 +199,9 @@
         .padding(0.15);
   
       const maxCount = d3.max(data, (d) => d.count) || 1;
-      const integerTicks = d3.range(0, maxCount + 1);
+      const step = Math.ceil(maxCount / 5);  // ~5 ticks
+      const integerTicks = d3.range(0, maxCount + 1, step);
+
       const xAxis = d3.axisBottom(x)
         .tickValues(integerTicks)
         .tickFormat(d3.format("d"));
@@ -228,7 +216,6 @@
         .call(yAxis)
         .call((g) => g.selectAll("text").style("font-size", "10px"));
   
-      // Tooltip
       let tooltip = d3.select("#breedTooltip");
       if (tooltip.empty()) {
         tooltip = d3
@@ -289,7 +276,6 @@
           updateBarStyles();
         })
         .on("click", function (event, d) {
-          // Toggle breed selection
           if (selectedBreed === d.breed) {
             selectedBreed = null;
           } else {
@@ -297,7 +283,7 @@
           }
           cardPage = 0;
           renderDogCards(baseRows, shelterName);
-          renderOriginsSankey(baseRows, shelterName); // update sankey with breed filter
+          renderOriginsSankey(baseRows, shelterName);
           updateBarStyles();
         });
   
@@ -328,7 +314,6 @@
       const svg = d3.select(sankeySvgEl);
       svg.selectAll("*").remove();
   
-      // Apply breed filter ONLY for the sankey (if any)
       let rows = baseRows;
       if (selectedBreed) {
         rows = rows.filter((d) => {
@@ -349,22 +334,21 @@
       }
   
       const linkMap = new Map();
-
-rows.forEach((r) => {
-  let from = r[FOUND_FIELD] || "Unknown origin";
-  from = String(from).trim();
-
-  let to =
-    shelterName === "ALL"
-      ? (r[SHELTER_FIELD] || "Unknown shelter")
-      : shelterName;
-
-  to = String(to).trim();
-
-  const key = from + "||" + to;
-  linkMap.set(key, (linkMap.get(key) || 0) + 1);
-});
-
+  
+      rows.forEach((r) => {
+        let from = r[FOUND_FIELD] || "Unknown origin";
+        from = String(from).trim();
+  
+        let to =
+          shelterName === "ALL"
+            ? (r[SHELTER_FIELD] || "Unknown shelter")
+            : shelterName;
+  
+        to = String(to).trim();
+  
+        const key = from + "||" + to;
+        linkMap.set(key, (linkMap.get(key) || 0) + 1);
+      });
   
       let linksArr = Array.from(linkMap, ([key, value]) => {
         const [from, to] = key.split("||");
@@ -489,7 +473,6 @@ rows.forEach((r) => {
           updateLinkStyles();
         })
         .on("click", function (event, d) {
-          // Toggle origin filter
           if (selectedOrigin === d.source.name) {
             selectedOrigin = null;
           } else {
@@ -497,7 +480,7 @@ rows.forEach((r) => {
           }
           cardPage = 0;
           renderDogCards(baseRows, shelterName);
-          renderBreedChart(baseRows, shelterName); // update bar chart with origin filter
+          renderBreedChart(baseRows, shelterName);
           updateLinkStyles();
         });
   
@@ -527,251 +510,230 @@ rows.forEach((r) => {
         .attr("font-size", "10px")
         .text((d) => d.name);
     }
-    
+  
+    // ---------- BREED FORCE NETWORK ----------
     function renderBreedForceGraph(rows, shelterName) {
-        if (!breedForceContainer || !breedForceSvgEl) return;
-      
-        const svg = d3.select(breedForceSvgEl);
-        svg.selectAll("*").remove();
-      
-        // If no data, show message
-        if (!rows || !rows.length) {
-          svg
-            .append("text")
-            .attr("x", "50%")
-            .attr("y", "50%")
-            .attr("text-anchor", "middle")
-            .attr("fill", "#999")
-            .text("No data available for breed network.");
-          return;
-        }
-      
-        const FOUND_FIELD = "Found";
-      
-        // ---- 1. Group rows by origin and compute co-occurrence of breeds ----
-        const byOrigin = d3.group(rows, (d) =>
-          String(d[FOUND_FIELD] || "Unknown origin").trim()
-        );
-      
-        const breedCounts = new Map();      // node weights
-        const pairCounts = new Map();       // edge weights
-      
-        for (const [origin, group] of byOrigin.entries()) {
-          // Unique breeds in this origin
-          const breeds = Array.from(
-            new Set(
-              group
-                .map((r) => (r.breed_primary || "Unknown").toString().trim())
-                .filter((b) => b)
-            )
-          );
-      
-          // Count each breed's presence at this origin
-          breeds.forEach((b) => {
-            breedCounts.set(b, (breedCounts.get(b) || 0) + 1);
-          });
-      
-          // For each unordered pair of breeds at this origin, increment link weight
-          for (let i = 0; i < breeds.length; i++) {
-            for (let j = i + 1; j < breeds.length; j++) {
-              const b1 = breeds[i];
-              const b2 = breeds[j];
-              const key = b1 < b2 ? `${b1}||${b2}` : `${b2}||${b1}`;
-              pairCounts.set(key, (pairCounts.get(key) || 0) + 1);
-            }
-          }
-        }
-      
-        // ---- 2. Pick top breeds to keep graph manageable ----
-        let breedList = Array.from(breedCounts, ([breed, count]) => ({
-          id: breed,
-          count,
-        }));
-      
-        if (!breedList.length) {
-          svg
-            .append("text")
-            .attr("x", "50%")
-            .attr("y", "50%")
-            .attr("text-anchor", "middle")
-            .attr("fill", "#999")
-            .text("No breeds to show in network.");
-          return;
-        }
-      
-        const MAX_NODES = 12;
-        breedList.sort((a, b) => b.count - a.count);
-        breedList = breedList.slice(0, MAX_NODES);
-      
-        const keptBreeds = new Set(breedList.map((b) => b.id));
-      
-        // ---- 3. Build links only between kept breeds ----
-        let links = Array.from(pairCounts, ([key, value]) => {
-          const [b1, b2] = key.split("||");
-          return { source: b1, target: b2, value };
-        }).filter((l) => keptBreeds.has(l.source) && keptBreeds.has(l.target));
-      
-        // Limit number of links
-        const MAX_LINKS = 40;
-        links.sort((a, b) => b.value - a.value);
-        links = links.slice(0, MAX_LINKS);
-      
-        if (!links.length) {
-          svg
-            .append("text")
-            .attr("x", "50%")
-            .attr("y", "50%")
-            .attr("text-anchor", "middle")
-            .attr("fill", "#999")
-            .text("Not enough breed co-occurrences to form a network.");
-          return;
-        }
-      
-        const nodes = breedList; // already in {id, count} form
-      
-        // ---- 4. Dimensions & setup ----
-        const margin = { top: 10, right: 10, bottom: 10, left: 10 };
-        const fullWidth = breedForceContainer.clientWidth || 600;
-        const fullHeight = 360;
-        const width = fullWidth - margin.left - margin.right;
-        const height = fullHeight - margin.top - margin.bottom;
-      
-        svg.attr("width", fullWidth).attr("height", fullHeight);
-      
-        const g = svg
-          .append("g")
-          .attr("transform", `translate(${margin.left},${margin.top})`);
-      
-        const color = d3.scaleOrdinal(d3.schemeCategory10);
-      
-        // Node radius scaled by count
-        const maxCount = d3.max(nodes, (d) => d.count) || 1;
-        const rScale = d3.scaleSqrt().domain([1, maxCount]).range([6, 20]);
-      
-        // ---- 5. Force simulation ----
-        const simulation = d3
-          .forceSimulation(nodes)
-          .force(
-            "link",
-            d3.forceLink(links).id((d) => d.id)
-              .distance((d) => 60 + 10 * d.value) // longer with stronger co-occurrence
-              .strength(0.4)
-          )
-          .force("charge", d3.forceManyBody().strength(-140))
-          .force("center", d3.forceCenter(width / 2, height / 2))
-          .force("collision", d3.forceCollide().radius((d) => rScale(d.count) + 4));
-      
-        // ---- 6. Tooltip ----
-        let tooltip = d3.select("#breedForceTooltip");
-        if (tooltip.empty()) {
-          tooltip = d3
-            .select("body")
-            .append("div")
-            .attr("id", "breedForceTooltip")
-            .style("position", "absolute")
-            .style("pointer-events", "none")
-            .style("background", "rgba(0,0,0,0.8)")
-            .style("color", "#fff")
-            .style("padding", "4px 8px")
-            .style("border-radius", "4px")
-            .style("font-size", "11px")
-            .style("opacity", 0);
-        }
-      
-        // ---- 7. Links ----
-        const link = g
-          .append("g")
-          .attr("stroke", "#999")
-          .attr("stroke-opacity", 0.6)
-          .selectAll("line")
-          .data(links)
-          .join("line")
-          .attr("stroke-width", (d) => Math.max(1, d.value));
-      
-        // ---- 8. Nodes (group for circle + label) ----
-        const node = g
-          .append("g")
-          .selectAll("g")
-          .data(nodes)
-          .join("g")
-          .call(
-            d3
-              .drag()
-              .on("start", (event, d) => {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-              })
-              .on("drag", (event, d) => {
-                d.fx = event.x;
-                d.fy = event.y;
-              })
-              .on("end", (event, d) => {
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
-              })
-          );
-      
-        node
-          .append("circle")
-          .attr("r", (d) => rScale(d.count))
-          .attr("fill", (d) => color(d.id))
-          .on("mouseover", function (event, d) {
-            tooltip
-              .style("opacity", 1)
-              .html(
-                `<strong>${d.id}</strong><br/>
-                 Seen in ${d.count} origin${
-                   d.count === 1 ? "" : "s"
-                 } in this selection`
-              );
-          })
-          .on("mousemove", function (event) {
-            tooltip
-              .style("left", event.pageX + 12 + "px")
-              .style("top", event.pageY - 20 + "px");
-          })
-          .on("mouseout", function () {
-            tooltip.style("opacity", 0);
-          });
-      
-        node
-          .append("text")
-          .attr("text-anchor", "middle")
-          .attr("dy", 3)
-          .attr("font-size", "9px")
-          .attr("fill", "#fff")
-          .text((d) => d.id);
-      
-        // ---- 9. Tick handler ----
-        simulation.on("tick", () => {
-          link
-            .attr("x1", (d) => d.source.x)
-            .attr("y1", (d) => d.source.y)
-            .attr("x2", (d) => d.target.x)
-            .attr("y2", (d) => d.target.y);
-      
-          node.attr("transform", (d) => `translate(${d.x},${d.y})`);
-        });
-      
-        // ---- 10. Subtitle ----
-        const subtitle =
-          shelterName === "ALL"
-            ? "Breed co-occurrence across all shelters"
-            : `Breed co-occurrence for ${shelterName}`;
-      
+      if (!breedForceContainer || !breedForceSvgEl) return;
+  
+      const svg = d3.select(breedForceSvgEl);
+      svg.selectAll("*").remove();
+  
+      if (!rows || !rows.length) {
         svg
           .append("text")
-          .attr("x", margin.left)
-          .attr("y", 14)
-          .attr("fill", "#555")
-          .attr("font-size", "11px")
-          .text(subtitle);
+          .attr("x", "50%")
+          .attr("y", "50%")
+          .attr("text-anchor", "middle")
+          .attr("fill", "#999")
+          .text("No data available for breed network.");
+        return;
       }
-      
-
-
+  
+      const byOrigin = d3.group(rows, (d) =>
+        String(d[FOUND_FIELD] || "Unknown origin").trim()
+      );
+  
+      const breedCounts = new Map();
+      const pairCounts = new Map();
+  
+      for (const [origin, group] of byOrigin.entries()) {
+        const breeds = Array.from(
+          new Set(
+            group
+              .map((r) => (r.breed_primary || "Unknown").toString().trim())
+              .filter((b) => b)
+          )
+        );
+  
+        breeds.forEach((b) => {
+          breedCounts.set(b, (breedCounts.get(b) || 0) + 1);
+        });
+  
+        for (let i = 0; i < breeds.length; i++) {
+          for (let j = i + 1; j < breeds.length; j++) {
+            const b1 = breeds[i];
+            const b2 = breeds[j];
+            const key = b1 < b2 ? `${b1}||${b2}` : `${b2}||${b1}`;
+            pairCounts.set(key, (pairCounts.get(key) || 0) + 1);
+          }
+        }
+      }
+  
+      let breedList = Array.from(breedCounts, ([breed, count]) => ({
+        id: breed,
+        count,
+      }));
+  
+      if (!breedList.length) {
+        svg
+          .append("text")
+          .attr("x", "50%")
+          .attr("y", "50%")
+          .attr("text-anchor", "middle")
+          .attr("fill", "#999")
+          .text("No breeds to show in network.");
+        return;
+      }
+  
+      const MAX_NODES = 12;
+      breedList.sort((a, b) => b.count - a.count);
+      breedList = breedList.slice(0, MAX_NODES);
+  
+      const keptBreeds = new Set(breedList.map((b) => b.id));
+  
+      let links = Array.from(pairCounts, ([key, value]) => {
+        const [b1, b2] = key.split("||");
+        return { source: b1, target: b2, value };
+      }).filter((l) => keptBreeds.has(l.source) && keptBreeds.has(l.target));
+  
+      const MAX_LINKS = 40;
+      links.sort((a, b) => b.value - a.value);
+      links = links.slice(0, MAX_LINKS);
+  
+      if (!links.length) {
+        svg
+          .append("text")
+          .attr("x", "50%")
+          .attr("y", "50%")
+          .attr("text-anchor", "middle")
+          .attr("fill", "#999")
+          .text("Not enough breed co-occurrences to form a network.");
+        return;
+      }
+  
+      const nodes = breedList;
+  
+      const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+      const fullWidth = breedForceContainer.clientWidth || 600;
+      const fullHeight = 360;
+      const width = fullWidth - margin.left - margin.right;
+      const height = fullHeight - margin.top - margin.bottom;
+  
+      svg.attr("width", fullWidth).attr("height", fullHeight);
+  
+      const g = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+  
+      const color = d3.scaleOrdinal(d3.schemeCategory10);
+  
+      const maxCount = d3.max(nodes, (d) => d.count) || 1;
+      const rScale = d3.scaleSqrt().domain([1, maxCount]).range([6, 20]);
+  
+      const simulation = d3
+        .forceSimulation(nodes)
+        .force(
+          "link",
+          d3.forceLink(links).id((d) => d.id)
+            .distance((d) => 60 + 10 * d.value)
+            .strength(0.4)
+        )
+        .force("charge", d3.forceManyBody().strength(-140))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius((d) => rScale(d.count) + 4));
+  
+      let tooltip = d3.select("#breedForceTooltip");
+      if (tooltip.empty()) {
+        tooltip = d3
+          .select("body")
+          .append("div")
+          .attr("id", "breedForceTooltip")
+          .style("position", "absolute")
+          .style("pointer-events", "none")
+          .style("background", "rgba(0,0,0,0.8)")
+          .style("color", "#fff")
+          .style("padding", "4px 8px")
+          .style("border-radius", "4px")
+          .style("font-size", "11px")
+          .style("opacity", 0);
+      }
+  
+      const link = g
+        .append("g")
+        .attr("stroke", "#999")
+        .attr("stroke-opacity", 0.6)
+        .selectAll("line")
+        .data(links)
+        .join("line")
+        .attr("stroke-width", (d) => Math.max(1, d.value));
+  
+      const node = g
+        .append("g")
+        .selectAll("g")
+        .data(nodes)
+        .join("g")
+        .call(
+          d3
+            .drag()
+            .on("start", (event, d) => {
+              if (!event.active) simulation.alphaTarget(0.3).restart();
+              d.fx = d.x;
+              d.fy = d.y;
+            })
+            .on("drag", (event, d) => {
+              d.fx = event.x;
+              d.fy = event.y;
+            })
+            .on("end", (event, d) => {
+              if (!event.active) simulation.alphaTarget(0);
+              d.fx = null;
+              d.fy = null;
+            })
+        );
+  
+      node
+        .append("circle")
+        .attr("r", (d) => rScale(d.count))
+        .attr("fill", (d) => color(d.id))
+        .on("mouseover", function (event, d) {
+          tooltip
+            .style("opacity", 1)
+            .html(
+              `<strong>${d.id}</strong><br/>
+               Seen in ${d.count} origin${d.count === 1 ? "" : "s"} in this selection`
+            );
+        })
+        .on("mousemove", function (event) {
+          tooltip
+            .style("left", event.pageX + 12 + "px")
+            .style("top", event.pageY - 20 + "px");
+        })
+        .on("mouseout", function () {
+          tooltip.style("opacity", 0);
+        });
+  
+      node
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", 3)
+        .attr("font-size", "9px")
+        .attr("fill", "#000")
+        .text((d) => d.id);
+  
+      simulation.on("tick", () => {
+        link
+          .attr("x1", (d) => d.source.x)
+          .attr("y1", (d) => d.source.y)
+          .attr("x2", (d) => d.target.x)
+          .attr("y2", (d) => d.target.y);
+  
+        node.attr("transform", (d) => `translate(${d.x},${d.y})`);
+      });
+  
+      const subtitle =
+        shelterName === "ALL"
+          ? "Breed co-occurrence across all shelters"
+          : `Breed co-occurrence for ${shelterName}`;
+  
+      svg
+        .append("text")
+        .attr("x", margin.left)
+        .attr("y", 14)
+        .attr("fill", "#555")
+        .attr("font-size", "11px")
+        .text(subtitle);
+    }
+  
     // ---------- DOG CARDS ----------
     function renderDogCards(baseRows, shelterName) {
       if (!dogCardsContainer) return;
@@ -788,7 +750,6 @@ rows.forEach((r) => {
         return;
       }
   
-      // Apply BOTH filters: breed + origin
       let rows = baseRows;
   
       if (selectedBreed) {
@@ -833,7 +794,6 @@ rows.forEach((r) => {
         const card = document.createElement("div");
         card.className = "col-12 col-sm-6 col-md-4 col-lg-3";
   
-        // Image handling
         let img = dog.image || null;
         if (img) {
           img = String(img).trim();
@@ -896,7 +856,6 @@ rows.forEach((r) => {
         dogCardsContainer.appendChild(card);
       });
   
-      // Pagination controls
       if (dogCardsPagerEl && totalPages > 1) {
         const prevBtn = document.createElement("button");
         prevBtn.className = "btn btn-sm btn-outline-secondary";
@@ -927,84 +886,478 @@ rows.forEach((r) => {
         dogCardsPagerEl.appendChild(nextBtn);
       }
     }
-    
-        // ---------- RECOMMENDER RESULTS ----------
-        function renderMatchResults(matches) {
-            if (!matchResultsEl) return;
+  
+    // ---------- RADAR + GAUGE HELPERS ----------
+    function mapAgeToScore(age) {
+      const a = (age || "").toLowerCase();
+      if (a === "baby") return 1.0;
+      if (a === "young") return 0.75;
+      if (a === "adult") return 0.5;
+      if (a === "senior") return 0.25;
+      return 0.5;
+    }
+  
+    function mapSizeToScore(size) {
+      const s = (size || "").toLowerCase();
+      if (s === "small") return 1.0;
+      if (s === "medium") return 0.75;
+      if (s === "large") return 0.5;
+      if (s === "xlarge" || s === "extra large") return 0.25;
+      return 0.5;
+    }
+  
+    function mapYesNoToScore(v) {
+      const raw = (v ?? "").toString().toLowerCase().trim();
+      if (raw === "1" || raw === "yes" || raw === "true") return 1.0;
+      if (raw === "0" || raw === "no" || raw === "false") return 0.0;
+      return 0.5;
+    }
+  
+    function mapSexToScore(sex) {
+      const s = (sex || "").toLowerCase();
+      if (s === "male" || s === "m") return 1.0;
+      if (s === "female" || s === "f") return 0.7;
+      return 0.85;
+    }
+  
+    function normalizeYesNoLabel(v) {
+        const raw = (v ?? "").toString().toLowerCase().trim();
+        if (raw === "1" || raw === "yes" || raw === "true") return "Yes";
+        if (raw === "0" || raw === "no" || raw === "false") return "No";
+        return "Unknown";
+      }
       
-            if (!matches || !matches.length) {
-              matchResultsEl.innerHTML = `
-                <div class="alert alert-warning py-2 my-2">
-                  No matches found for those preferences. Try relaxing your criteria.
-                </div>
-              `;
-              return;
+      function buildRadarDataForDog(dog) {
+        return [
+          {
+            axis: "Age",
+            value: mapAgeToScore(dog.age),
+            raw: dog.age ?? "Unknown"
+          },
+          {
+            axis: "Size",
+            value: mapSizeToScore(dog.size),
+            raw: dog.size ?? "Unknown"
+          },
+          {
+            axis: "Kids",
+            value: mapYesNoToScore(dog.env_children),
+            raw: normalizeYesNoLabel(dog.env_children)
+          },
+          {
+            axis: "Dogs",
+            value: mapYesNoToScore(dog.env_dogs),
+            raw: normalizeYesNoLabel(dog.env_dogs)
+          },
+          {
+            axis: "Sex",
+            value: mapSexToScore(dog.sex),
+            raw: dog.sex ?? "Unknown"
+          },
+        ];
+      }
+      
+  
+    function drawSimilarityGauge(containerSelector, similarity) {
+        const container = d3.select(containerSelector);
+        container.selectAll("*").remove();
+      
+        const node = container.node();
+        if (!node) return;
+      
+        // Dynamically size but cap the max width so it doesn't blow up
+        const containerWidth = node.clientWidth || 200;
+        const maxWidth = 220;
+        const width = Math.min(containerWidth, maxWidth);
+        const height = Math.max(90, width * 0.45); // short, compact gauge
+      
+        const outerRadius = Math.min(width, height * 2) * 0.45;
+        const innerRadius = outerRadius - 10;
+      
+        const svg = container
+          .append("svg")
+          .attr("width", "100%")
+          .attr("height", height)
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("preserveAspectRatio", "xMidYMid meet");
+      
+        const g = svg
+          .append("g")
+          .attr("transform", `translate(${width / 2},${height})`);
+      
+        const bgArc = d3.arc()
+          .innerRadius(innerRadius)
+          .outerRadius(outerRadius)
+          .startAngle(-Math.PI)
+          .endAngle(0);
+      
+        g.append("path")
+          .attr("d", bgArc)
+          .attr("fill", "#eee");
+      
+        const clamped = Math.max(0, Math.min(1, similarity || 0));
+        const fgArc = d3.arc()
+          .innerRadius(innerRadius)
+          .outerRadius(outerRadius)
+          .startAngle(-Math.PI)
+          .endAngle(-Math.PI + Math.PI * clamped);
+      
+        g.append("path")
+          .attr("d", fgArc)
+          .attr("fill", "#5a8dee");
+      
+        g.append("text")
+          .attr("text-anchor", "middle")
+          .attr("y", -outerRadius * 0.8)
+          .style("font-size", Math.max(11, width * 0.11) + "px")
+          .text(`${(clamped * 100).toFixed(0)}%`);
+      
+        g.append("text")
+          .attr("text-anchor", "middle")
+          .attr("y", -outerRadius * 0.55)
+          .style("font-size", "9px")
+          .style("fill", "#666")
+          .text("Match");
+      }
+      
+  
+      function drawRadarChart(containerSelector, data) {
+        const container = d3.select(containerSelector);
+        container.selectAll("*").remove();
+      
+        if (!data || !data.length) {
+          container
+            .append("p")
+            .attr("class", "text-muted small mb-0")
+            .text("No profile data.");
+          return;
+        }
+      
+        const node = container.node();
+        if (!node) return;
+      
+        const containerWidth = node.clientWidth || 220;
+        const maxSide = 260;                 // cap so it doesn't get huge
+        const side = Math.min(containerWidth, maxSide);
+        const width = side;
+        const height = side * 0.9;          // slightly squat so it fits under the gauge
+        const margin = 18;
+        const radius = Math.min(width, height) / 2 - margin;
+        const levels = 4;
+        const angleSlice = (Math.PI * 2) / data.length;
+      
+        const svg = container
+          .append("svg")
+          .attr("width", "100%")
+          .attr("height", height)
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("preserveAspectRatio", "xMidYMid meet");
+      
+        const g = svg
+          .append("g")
+          .attr("transform", `translate(${width / 2},${height / 2})`);
+      
+        const rScale = d3.scaleLinear().domain([0, 1]).range([0, radius]);
+      
+        // Grid circles
+        for (let l = 1; l <= levels; l++) {
+          const r = (radius / levels) * l;
+          g.append("circle")
+            .attr("r", r)
+            .attr("fill", "none")
+            .attr("stroke", "#eee");
+        }
+      
+        // Axes & labels
+        const axis = g
+          .selectAll(".axis")
+          .data(data)
+          .join("g")
+          .attr("class", "axis");
+      
+        axis
+          .append("line")
+          .attr("x1", 0)
+          .attr("y1", 0)
+          .attr("x2", (d, i) =>
+            rScale(1) * Math.cos(angleSlice * i - Math.PI / 2)
+          )
+          .attr("y2", (d, i) =>
+            rScale(1) * Math.sin(angleSlice * i - Math.PI / 2)
+          )
+          .attr("stroke", "#ccc");
+      
+        axis
+          .append("text")
+          .attr("x", (d, i) =>
+            rScale(1.15) * Math.cos(angleSlice * i - Math.PI / 2)
+          )
+          .attr("y", (d, i) =>
+            rScale(1.15) * Math.sin(angleSlice * i - Math.PI / 2)
+          )
+          .attr("dy", "0.35em")
+          .style("font-size", "9px")
+          .style("text-anchor", "middle")
+          .text((d) => d.axis);
+      
+        const line = d3
+          .lineRadial()
+          .radius((d) => rScale(d.value))
+          .angle((d, i) => i * angleSlice)
+          .curve(d3.curveLinearClosed);
+      
+        // Radar area shape
+        g.append("path")
+          .datum(data)
+          .attr("d", line)
+          .attr("fill", "rgba(90, 141, 238, 0.25)")
+          .attr("stroke", "#5a8dee")
+          .attr("stroke-width", 2);
+      
+        // Tooltip (shared for all points)
+        let tooltip = d3.select("#radarTooltip");
+        if (tooltip.empty()) {
+          tooltip = d3
+            .select("body")
+            .append("div")
+            .attr("id", "radarTooltip")
+            .style("position", "absolute")
+            .style("pointer-events", "none")
+            .style("background", "rgba(0,0,0,0.8)")
+            .style("color", "#fff")
+            .style("padding", "4px 8px")
+            .style("border-radius", "4px")
+            .style("font-size", "11px")
+            .style("opacity", 0);
+        }
+      
+        // Hoverable points at each vertex
+        const points = g
+          .selectAll("circle.radar-point")
+          .data(data)
+          .join("circle")
+          .attr("class", "radar-point")
+          .attr("r", 3)
+          .attr("cx", (d, i) =>
+            rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2)
+          )
+          .attr("cy", (d, i) =>
+            rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2)
+          )
+          .attr("fill", "#5a8dee")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 1)
+          .on("mouseover", function (event, d) {
+            d3.select(this).attr("fill", "#345bb3");
+      
+            tooltip
+              .style("opacity", 1)
+              .html(() => {
+                const rawVal = d.raw ?? "";
+                return `<strong>${d.axis}</strong><br/>${rawVal}`;
+              });
+          })
+          .on("mousemove", function (event) {
+            tooltip
+              .style("left", event.pageX + 12 + "px")
+              .style("top", event.pageY - 20 + "px");
+          })
+          .on("mouseout", function () {
+            d3.select(this).attr("fill", "#5a8dee");
+            tooltip.style("opacity", 0);
+          });
+      }
+      
+      
+  
+    // ---------- RECOMMENDER RESULTS WITH SCROLLSPY ----------
+    function renderMatchResults(matches) {
+      if (!matchResultsEl) return;
+  
+      if (!matches || !matches.length) {
+        matchResultsEl.innerHTML = `
+          <div class="alert alert-warning py-2 my-2">
+            No matches found for those preferences. Try relaxing your criteria.
+          </div>
+        `;
+        return;
+      }
+  
+      const sorted = [...matches].sort((a, b) => {
+        const sa = a.similarity ?? 0;
+        const sb = b.similarity ?? 0;
+        return sb - sa;
+      });
+  
+      const navLinksHtml = sorted
+        .map((m, i) => {
+          const sim = typeof m.similarity === "number" ? m.similarity : 0;
+          const pct = (sim * 100).toFixed(0);
+          const label = m.name || `Dog ${i + 1}`;
+          return `
+            <a href="#dog-rec-${i}" class="list-group-item list-group-item-action">
+              ${label}
+              <span class="d-block small text-muted">${pct}% match</span>
+            </a>
+          `;
+        })
+        .join("");
+  
+      const sectionsHtml = sorted
+        .map((m, i) => {
+          const sim = typeof m.similarity === "number" ? m.similarity : 0;
+          const pct = (sim * 100).toFixed(1);
+  
+          const name = m.name ?? "Unknown";
+          const age = m.age ?? "Unknown";
+          const breed = m.breed_primary ?? "Unknown";
+          const size = m.size ?? "Unknown";
+          const sex = m.sex ?? "Unknown";
+          const shelter = m.shelter_name ?? "Unknown shelter";
+          const address = m.shelter_address ?? "";
+          const kids = m.env_children ?? "";
+          const dogs = m.env_dogs ?? "";
+          const cats = m.env_cats ?? "";
+          const house = m.house_trained ?? "";
+          const special = m.special_needs ?? "";
+  
+          let img = m.image || null;
+          if (img) {
+            img = String(img).trim();
+            const parts = img.split(/[\\/]/);
+            const fileName = parts[parts.length - 1];
+            if (
+              !img.startsWith("http://") &&
+              !img.startsWith("https://") &&
+              !img.startsWith("/")
+            ) {
+              img = window.dog_image_base
+                ? window.dog_image_base + fileName
+                : "/static/images/" + fileName;
             }
-      
-            const rowsHtml = matches
-              .map((m) => {
-                const simPct = m.similarity != null
-                  ? `${(m.similarity * 100).toFixed(1)}%`
-                  : "–";
-      
-                return `
-                  <tr>
-                    <td>${m.name ?? "Unknown"}</td>
-                    <td>${m.shelter_name ?? "Unknown"}</td>
-                    <td>${m.shelter_address ?? "Unknown"}</td>
-                    <td>${m.breed_primary ?? "Unknown"}</td>
-                    <td>${m.age ?? "Unknown"}</td>
-                    <td>${m.size ?? "Unknown"}</td>
-                    <td>${m.sex ?? "Unknown"}</td>
-                    <td>${m.env_children ?? ""}</td>
-                    <td>${m.env_dogs ?? ""}</td>
-                    <td>${m.env_cats ?? ""}</td>
-                    <td>${m.house_trained ?? ""}</td>
-                    <td>${m.special_needs ?? ""}</td>
-                    <td>${m.kmeans_cluster}</td>
-                    <td>${simPct}</td>
-                  </tr>
-                `;
-              })
-              .join("");
-      
-            matchResultsEl.innerHTML = `
+          } else {
+            img = "/static/images/image2.jpg";
+          }
+  
+          return `
+            <section id="dog-rec-${i}" class="mb-4">
               <div class="card">
-                <div class="card-header py-2">
-                  <strong>Recommended matches</strong>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>${name}</strong>
+                    <span class="text-muted small d-block">
+                      ${breed} • ${age} • ${size} • ${sex}
+                    </span>
+                    <span class="text-muted small d-block">
+                      ${shelter}${address ? " • " + address : ""}
+                    </span>
+                  </div>
+                  <span class="badge bg-primary">${pct}% match</span>
                 </div>
-                <div class="table-responsive">
-                  <table class="table table-sm mb-0">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Name</th>
-                        <th>Shelter Name</th>
-                        <th>Shelter Address</th>
-                        <th>Breed</th>
-                        <th>Age</th>
-                        <th>Size</th>
-                        <th>Sex</th>
-                        <th>Kids</th>
-                        <th>Dogs</th>
-                        <th>Cats</th>
-                        <th>House trained</th>
-                        <th>Special needs</th>
-                        <th>Group</th>
-                        <th>Similarity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${rowsHtml}
-                    </tbody>
-                  </table>
+                <div class="card-body">
+                  <div class="row g-3 align-items-stretch">
+  
+                    <!-- Dog flip card (same style as main dog cards) -->
+                    <div class="col-lg-4 col-md-5">
+                      <div class="flip-card">
+                        <div class="flip-card-inner">
+  
+                          <!-- FRONT -->
+                          <div class="flip-card-front d-flex flex-column justify-content-end"
+                               style="
+                                 background-image: url('${img}');
+                                 background-size: cover;
+                                 background-position: center;
+                                 background-repeat: no-repeat;
+                                 color: white;
+                                 text-shadow: 0 0 6px black;
+                               ">
+                            <div class="p-2" style="background: rgba(0,0,0,0.4); border-radius: 6px;">
+                              <h5 class="fw-bold mb-1">${name}</h5>
+                              <p class="mb-1"><strong>Age:</strong> ${age}</p>
+                              <p class="mb-1"><strong>Breed:</strong> ${breed}</p>
+                              <p class="mb-1"><strong>Size:</strong> ${size}</p>
+                              <p class="mb-0"><strong>Sex:</strong> ${sex}</p>
+                            </div>
+                          </div>
+  
+                          <!-- BACK -->
+                          <div class="flip-card-back d-flex align-items-center justify-content-center">
+                            <div class="px-2 small text-center">
+                              <p class="mb-1"><strong>Good with kids:</strong> ${kids}</p>
+                              <p class="mb-1"><strong>Good with dogs:</strong> ${dogs}</p>
+                              <p class="mb-1"><strong>Good with cats:</strong> ${cats}</p>
+                              <p class="mb-1"><strong>House trained:</strong> ${house}</p>
+                              <p class="mb-0"><strong>Special needs:</strong> ${special}</p>
+                            </div>
+                          </div>
+  
+                        </div>
+                      </div>
+                    </div>
+  
+                    <!-- Visualizations stacked vertically -->
+                    <div class="col-lg-8 col-md-7">
+                      <div class="row g-3">
+                        <div class="col-12">
+                          <h6 class="mb-1">Similarity meter</h6>
+                          <div id="similarityGauge-${i}" style="min-height: 120px;"></div>
+                        </div>
+                        <div class="col-12">
+                          <h6 class="mb-1">Profile radar</h6>
+                          <div id="radarChart-${i}" style="min-height: 220px;"></div>
+                        </div>
+                      </div>
+                    </div>
+  
+                  </div>
                 </div>
               </div>
-            `;
-          }
-      
-
-
-
+            </section>
+          `;
+        })
+        .join("");
+  
+      matchResultsEl.innerHTML = `
+        <div class="row">
+          <nav class="col-md-3 d-none d-md-block">
+            <div class="position-sticky" style="top: 1rem;">
+              <div class="list-group" id="matchScrollspyList">
+                ${navLinksHtml}
+              </div>
+            </div>
+          </nav>
+  
+          <div class="col-md-9">
+            <div id="matchScrollspyScroll"
+                 data-bs-spy="scroll"
+                 data-bs-target="#matchScrollspyList"
+                 data-bs-smooth-scroll="true"
+                 class="scrollspy-example"
+                 tabindex="0"
+                 style="max-height: 640px; overflow-y: auto; position: relative;">
+              ${sectionsHtml}
+            </div>
+          </div>
+        </div>
+      `;
+  
+      if (window.bootstrap && bootstrap.ScrollSpy) {
+        const scrollSpyEl = document.getElementById("matchScrollspyScroll");
+        const existing = bootstrap.ScrollSpy.getInstance(scrollSpyEl);
+        if (existing) existing.dispose();
+        new bootstrap.ScrollSpy(scrollSpyEl, {
+          target: "#matchScrollspyList",
+          offset: 10,
+        });
+      }
+  
+      sorted.forEach((dog, i) => {
+        drawSimilarityGauge(`#similarityGauge-${i}`, dog.similarity ?? 0);
+        drawRadarChart(`#radarChart-${i}`, buildRadarDataForDog(dog));
+      });
+    }
+  
     // ---------- MAIN DASHBOARD UPDATE ----------
     function updateShelterDashboard(rows, shelterName) {
       renderShelterTable(rows);
@@ -1051,371 +1404,86 @@ rows.forEach((r) => {
   
       updateShelterDashboard(rows, shelterName);
     }
-
-        // ---------- RECOMMENDER FORM LOGIC ----------
-if (matchFormEl && matchResultsEl) {
-    matchFormEl.addEventListener("submit", async (event) => {
-      event.preventDefault();
   
-      const formData = new FormData(matchFormEl);
-      const payload = {};
+    // ---------- RECOMMENDER FORM LOGIC ----------
+    if (matchFormEl && matchResultsEl) {
+      matchFormEl.addEventListener("submit", async (event) => {
+        event.preventDefault();
   
-      const keys = [
-        "age",
-        "size",
-        "sex",
-        "coat",
-        "env_children",
-        "breed_mixed",
-        "env_dogs",
-        "env_cats",
-        "house_trained",
-        "special_needs",
-      ];
+        const formData = new FormData(matchFormEl);
+        const payload = {};
   
-      // 👇 NEW: send the currently selected shelter
-      // If "ALL", we send null so backend can treat it as "no shelter filter".
-      const shelterNameForPayload =
-        currentShelterName && currentShelterName !== "ALL"
-          ? currentShelterName
-          : null;
+        const keys = [
+          "age",
+          "size",
+          "sex",
+          "coat",
+          "env_children",
+          "breed_mixed",
+          "env_dogs",
+          "env_cats",
+          "house_trained",
+          "special_needs",
+        ];
   
-      payload.shelter_name = shelterNameForPayload;
+        const shelterNameForPayload =
+          currentShelterName && currentShelterName !== "ALL"
+            ? currentShelterName
+            : null;
   
-      keys.forEach((k) => {
-        const v = formData.get(k);
-        if (v !== null && v !== "") {
-          payload[k] = String(v);
-        }
-      });
+        payload.shelter_name = shelterNameForPayload;
   
-      // Top N
-      const topN = formData.get("top_n");
-      if (topN) {
-        payload.top_n = parseInt(topN, 10);
-      }
-  
-      // Optional: show "loading" message
-      matchResultsEl.innerHTML = `
-        <p class="text-muted small">Finding matches…</p>
-      `;
-  
-      try {
-        const resp = await fetch("/api/recommend_dogs", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+        keys.forEach((k) => {
+          const v = formData.get(k);
+          if (v !== null && v !== "") {
+            payload[k] = String(v);
+          }
         });
   
-        if (!resp.ok) {
-          console.error("Recommend API error:", resp.status, resp.statusText);
-          matchResultsEl.innerHTML = `
-            <div class="alert alert-danger py-2 my-2">
-              There was a problem finding matches. Please try again.
-            </div>
-          `;
-          return;
+        const topN = formData.get("top_n");
+        if (topN) {
+          payload.top_n = parseInt(topN, 10);
         }
   
-        const data = await resp.json();
-        console.log("🔍 Recommendation response:", data);
-        renderMatchResults(data.matches || []);
-      } catch (err) {
-        console.error("Recommend request failed:", err);
         matchResultsEl.innerHTML = `
-          <div class="alert alert-danger py-2 my-2">
-            Could not reach the recommendation service.
-          </div>
+          <p class="text-muted small">Finding matches…</p>
         `;
-      }
-    });
-  }
   
-      
+        try {
+          const resp = await fetch("/api/recommend_dogs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+  
+          if (!resp.ok) {
+            console.error("Recommend API error:", resp.status, resp.statusText);
+            matchResultsEl.innerHTML = `
+              <div class="alert alert-danger py-2 my-2">
+                There was a problem finding matches. Please try again.
+              </div>
+            `;
+            return;
+          }
+  
+          const data = await resp.json();
+          console.log("🔍 Recommendation response:", data);
+          renderMatchResults(data.matches || []);
+        } catch (err) {
+          console.error("Recommend request failed:", err);
+          matchResultsEl.innerHTML = `
+            <div class="alert alert-danger py-2 my-2">
+              Could not reach the recommendation service.
+            </div>
+          `;
+        }
+      });
+    }
   
     // ---------- INIT ----------
     renderShelterList("");
     label.text("Showing all shelters");
     updateShelterDashboard(shelterData, "ALL");
   })();
-  
-  
-  // ---------------------------------------------------------
-  // d3TableWithControls helper
-  // ---------------------------------------------------------
-  function d3TableWithControls(
-    data,
-    {
-      searchKey = "name",
-      pageSizes = [10, 25, 50, 100],
-      pageSize = 25,
-      filters = [],
-    } = {}
-  ) {
-    const columns = Array.from(
-      data.reduce((s, r) => {
-        for (const k of Object.keys(r)) s.add(k);
-        return s;
-      }, new Set())
-    );
-  
-    let q = "";
-    let sortCol = null;
-    let sortAsc = true;
-    let page = 0;
-    let ps = pageSize;
-  
-    const filterState = {};
-    filters.forEach((f) => {
-      filterState[f.key] = "all";
-    });
-  
-    const root = d3
-      .create("div")
-      .attr("class", "d3-table-wrap")
-      .style("font", "11px system-ui, sans-serif");
-  
-    root.append("style").text(`
-      .d3-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 8px}
-      .d3-spacer{flex:1}
-      .d3-btn,.d3-input,.d3-select{padding:3px 6px;border:1px solid #ccc;border-radius:6px;background:#fff;font-size:11px}
-      .d3-btn[disabled]{opacity:.5;cursor:default}
-      .scroll-x{overflow-x:auto; -webkit-overflow-scrolling:touch;}
-      .d3-table{border-collapse:collapse;width:100%; table-layout:auto;}
-      .d3-table thead th{position:sticky; top:0; background:#fff; border-bottom:1px solid #000; text-align:left; padding:2px 6px; user-select:none; cursor:pointer; white-space:nowrap; line-height:1.2}
-      .d3-table tbody td{border-bottom:1px solid #eee; padding:2px 6px; line-height:1.2; white-space:nowrap;}
-      .badge{font-size:10px;padding:1px 6px;border:1px solid #ddd;border-radius:999px;background:#f8f8f8}
-      .d3-filter-label{display:flex;align-items:center;gap:4px}
-    `);
-  
-    const ctrTop = root.append("div").attr("class", "d3-controls");
-  
-    ctrTop
-      .append("label")
-      .attr("class", "d3-filter-label")
-      .text(`Search ${searchKey}:`)
-      .append("input")
-      .attr("type", "text")
-      .attr("class", "d3-input")
-      .attr("placeholder", `Search ${searchKey}...`)
-      .on("input", function () {
-        q = this.value.toLowerCase();
-        page = 0;
-        update();
-      });
-  
-    filters.forEach((f) => {
-      const values = Array.from(
-        new Set(
-          data
-            .map((d) => d[f.key])
-            .filter((v) => v !== null && v !== undefined && v !== "")
-        )
-      )
-        .map(String)
-        .sort((a, b) =>
-          a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
-        );
-  
-      const label = ctrTop.append("label").attr("class", "d3-filter-label");
-      label.append("span").text(`${f.label}:`);
-  
-      const sel = label
-        .append("select")
-        .attr("class", "d3-select")
-        .on("change", function () {
-          filterState[f.key] = this.value;
-          page = 0;
-          update();
-        });
-  
-      sel.append("option").attr("value", "all").text("All");
-  
-      sel
-        .selectAll("option.value")
-        .data(values)
-        .join("option")
-        .attr("class", "value")
-        .attr("value", (d) => d)
-        .text((d) => d);
-    });
-  
-    ctrTop.append("span").text("Rows:");
-    const sizeSel = ctrTop
-      .append("select")
-      .attr("class", "d3-select")
-      .on("change", () => {
-        ps = +sizeSel.property("value");
-        page = 0;
-        update();
-      });
-  
-    sizeSel
-      .selectAll("option")
-      .data(pageSizes)
-      .join("option")
-      .attr("value", (d) => d)
-      .property("selected", (d) => d === ps)
-      .text((d) => d);
-  
-    ctrTop.append("span").attr("class", "d3-spacer");
-  
-    const prevTop = ctrTop
-      .append("button")
-      .attr("class", "d3-btn")
-      .text("⬅ Previous page")
-      .on("click", () => {
-        page = Math.max(0, page - 1);
-        update();
-      });
-  
-    const nextTop = ctrTop
-      .append("button")
-      .attr("class", "d3-btn")
-      .text("Next page ➡")
-      .on("click", () => {
-        page = page + 1;
-        update();
-      });
-  
-    const infoTop = ctrTop.append("span").attr("class", "badge");
-  
-    const scroller = root.append("div").attr("class", "scroll-x");
-    const table = scroller.append("table").attr("class", "d3-table");
-    const thead = table.append("thead");
-    const tbody = table.append("tbody");
-  
-    const headRow = thead.append("tr");
-    headRow
-      .selectAll("th")
-      .data(columns)
-      .join("th")
-      .on("click", (event, col) => {
-        if (sortCol === col) sortAsc = !sortAsc;
-        else {
-          sortCol = col;
-          sortAsc = true;
-        }
-        page = 0;
-        update();
-      })
-      .each(function (c) {
-        const s = d3.select(this);
-        s.append("span").text(c);
-        s.append("span")
-          .attr("class", "sort")
-          .style("margin-left", "6px")
-          .text("↕");
-      });
-  
-    const ctrBot = root.append("div").attr("class", "d3-controls");
-    ctrBot.append("span").attr("class", "d3-spacer");
-  
-    const prevBot = ctrBot
-      .append("button")
-      .attr("class", "d3-btn")
-      .text("⬅ Previous page")
-      .on("click", () => {
-        page = Math.max(0, page - 1);
-        update();
-      });
-  
-    const nextBot = ctrBot
-      .append("button")
-      .attr("class", "d3-btn")
-      .text("Next page ➡")
-      .on("click", () => {
-        page = page + 1;
-        update();
-      });
-  
-    const infoBot = ctrBot.append("span").attr("class", "badge");
-  
-    const cmp = (a, b) => {
-      if (a == null && b == null) return 0;
-      if (a == null) return 1;
-      if (b == null) return -1;
-      if (a instanceof Date && b instanceof Date) return d3.ascending(+a, +b);
-      if (typeof a === "number" && typeof b === "number")
-        return d3.ascending(a, b);
-      return String(a).localeCompare(String(b), undefined, {
-        numeric: true,
-        sensitivity: "base",
-      });
-    };
-  
-    const currentRows = () => {
-      let rows = data;
-  
-      if (q)
-        rows = rows.filter((d) =>
-          String(d[searchKey] ?? "")
-            .toLowerCase()
-            .includes(q)
-        );
-  
-      filters.forEach((f) => {
-        const selected = filterState[f.key];
-        if (selected !== "all") {
-          rows = rows.filter(
-            (d) => String(d[f.key] ?? "") === String(selected)
-          );
-        }
-      });
-  
-      if (sortCol)
-        rows = rows
-          .slice()
-          .sort(
-            (a, b) => cmp(a[sortCol], b[sortCol]) * (sortAsc ? 1 : -1)
-          );
-  
-      return rows;
-    };
-  
-    function update() {
-      const rows = currentRows();
-      const pages = Math.max(1, Math.ceil(rows.length / ps));
-      page = Math.min(page, pages - 1);
-      const start = page * ps;
-      const end = Math.min(start + ps, rows.length);
-      const pageRows = rows.slice(start, end);
-  
-      thead.selectAll(".sort").text((_, i, nodes) => {
-        const col = columns[nodes[i].parentNode.cellIndex];
-        if (col !== sortCol) return "↕";
-        return sortAsc ? "▲" : "▼";
-      });
-  
-      const tr = tbody.selectAll("tr").data(pageRows).join("tr");
-      tr.selectAll("td")
-        .data((d) => columns.map((c) => d[c]))
-        .join("td")
-        .text((v) => (v == null ? "" : v));
-  
-      prevTop.attr("disabled", page <= 0 ? true : null);
-      nextTop.attr("disabled", page >= pages - 1 ? true : null);
-      prevBot.attr("disabled", page <= 0 ? true : null);
-      nextBot.attr("disabled", page >= pages - 1 ? true : null);
-  
-      infoTop.text(
-        `${rows.length ? start + 1 : 0}–${end} of ${rows.length} record${
-          rows.length === 1 ? "" : "s"
-        }`
-      );
-      infoBot.text(
-        `Page ${rows.length ? page + 1 : 0}/${pages} • ${
-          rows.length ? start + 1 : 0
-        }–${end} of ${rows.length}`
-      );
-    }
-  
-    update();
-    return root.node();
-  }
-  
-  
-    
-  
   
   

@@ -149,6 +149,7 @@ def api_recommend_dogs():
     # 6) Choose columns to send back
     cols_to_send = [
         "name",
+        "image",
         "shelter_name",
         "shelter_address",
         "breed_primary",
