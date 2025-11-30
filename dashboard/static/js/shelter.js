@@ -1053,80 +1053,84 @@ rows.forEach((r) => {
     }
 
         // ---------- RECOMMENDER FORM LOGIC ----------
-        if (matchFormEl && matchResultsEl) {
-            matchFormEl.addEventListener("submit", async (event) => {
-              event.preventDefault();
-      
-              // Keys must match your cat_cols from Python:
-              // ["age", "size", "sex", "coat", "env_children", "breed_mixed",
-              //  "env_dogs", "env_cats", "house_trained", "special_needs"]
-              const formData = new FormData(matchFormEl);
-              const payload = {};
-      
-              const keys = [
-                "age",
-                "size",
-                "sex",
-                "coat",
-                "env_children",
-                "breed_mixed",
-                "env_dogs",
-                "env_cats",
-                "house_trained",
-                "special_needs",
-              ];
-
-              shelter_name: currentShelterName
-              payload.shelter_name = shelter_name
-      
-              keys.forEach((k) => {
-                const v = formData.get(k);
-                if (v !== null && v !== "") {
-                  payload[k] = String(v);
-                }
-              });
-      
-              // Top N
-              const topN = formData.get("top_n");
-              if (topN) {
-                payload.top_n = parseInt(topN, 10);
-              }
-      
-              // Optional: show "loading" message
-              matchResultsEl.innerHTML = `
-                <p class="text-muted small">Finding matches…</p>
-              `;
-      
-              try {
-                const resp = await fetch("/api/recommend_dogs", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(payload),
-                });
-      
-                if (!resp.ok) {
-                  console.error("Recommend API error:", resp.status, resp.statusText);
-                  matchResultsEl.innerHTML = `
-                    <div class="alert alert-danger py-2 my-2">
-                      There was a problem finding matches. Please try again.
-                    </div>
-                  `;
-                  return;
-                }
-      
-                const data = await resp.json();
-                console.log("🔍 Recommendation response:", data);
-                renderMatchResults(data.matches || []);
-              } catch (err) {
-                console.error("Recommend request failed:", err);
-                matchResultsEl.innerHTML = `
-                  <div class="alert alert-danger py-2 my-2">
-                    Could not reach the recommendation service.
-                  </div>
-                `;
-              }
-            });
-          }
+if (matchFormEl && matchResultsEl) {
+    matchFormEl.addEventListener("submit", async (event) => {
+      event.preventDefault();
+  
+      const formData = new FormData(matchFormEl);
+      const payload = {};
+  
+      const keys = [
+        "age",
+        "size",
+        "sex",
+        "coat",
+        "env_children",
+        "breed_mixed",
+        "env_dogs",
+        "env_cats",
+        "house_trained",
+        "special_needs",
+      ];
+  
+      // 👇 NEW: send the currently selected shelter
+      // If "ALL", we send null so backend can treat it as "no shelter filter".
+      const shelterNameForPayload =
+        currentShelterName && currentShelterName !== "ALL"
+          ? currentShelterName
+          : null;
+  
+      payload.shelter_name = shelterNameForPayload;
+  
+      keys.forEach((k) => {
+        const v = formData.get(k);
+        if (v !== null && v !== "") {
+          payload[k] = String(v);
+        }
+      });
+  
+      // Top N
+      const topN = formData.get("top_n");
+      if (topN) {
+        payload.top_n = parseInt(topN, 10);
+      }
+  
+      // Optional: show "loading" message
+      matchResultsEl.innerHTML = `
+        <p class="text-muted small">Finding matches…</p>
+      `;
+  
+      try {
+        const resp = await fetch("/api/recommend_dogs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+  
+        if (!resp.ok) {
+          console.error("Recommend API error:", resp.status, resp.statusText);
+          matchResultsEl.innerHTML = `
+            <div class="alert alert-danger py-2 my-2">
+              There was a problem finding matches. Please try again.
+            </div>
+          `;
+          return;
+        }
+  
+        const data = await resp.json();
+        console.log("🔍 Recommendation response:", data);
+        renderMatchResults(data.matches || []);
+      } catch (err) {
+        console.error("Recommend request failed:", err);
+        matchResultsEl.innerHTML = `
+          <div class="alert alert-danger py-2 my-2">
+            Could not reach the recommendation service.
+          </div>
+        `;
+      }
+    });
+  }
+  
       
   
     // ---------- INIT ----------

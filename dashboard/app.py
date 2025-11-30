@@ -98,11 +98,18 @@ def api_recommend_dogs():
       "house_trained": "1",
       "special_needs": "0",
       "breed_mixed": "1",
-      "top_n": 10
+      "top_n": 10,
+      "shelter_name": "Some Shelter"   # optional; null or "ALL" = no shelter filter
     }
-    Only the keys present in cat_cols matter; others are ignored.
+    Only the keys present in cat_cols matter for the vector; shelter_name is used to
+    filter candidate dogs after clustering.
     """
     payload = request.get_json(force=True) or {}
+
+    # 0) Optional shelter filter from payload
+    shelter_name = payload.get("shelter_name")
+    if shelter_name:
+        shelter_name = str(shelter_name).strip()
 
     # 1) Build user vector (1 x D)
     user_vec = build_user_vector_from_payload(payload)
@@ -110,8 +117,17 @@ def api_recommend_dogs():
     # 2) Assign user to nearest KMeans cluster
     user_cluster = int(kmeans.predict(user_vec)[0])
 
-    # 3) Filter dogs to that cluster
-    mask = dogs_k["kmeans_cluster"] == user_cluster
+    # 3) Filter dogs to that cluster (and shelter, if provided)
+    base_mask = dogs_k["kmeans_cluster"] == user_cluster
+
+    if shelter_name and shelter_name.upper() != "ALL":
+        # Make comparison robust to whitespace / type
+        mask = base_mask & (
+            dogs_k["shelter_name"].astype(str).str.strip() == shelter_name
+        )
+    else:
+        mask = base_mask
+
     if not mask.any():
         return jsonify({"matches": []})
 
@@ -119,11 +135,11 @@ def api_recommend_dogs():
     candidate_vectors = full_vectors[cluster_indices]
     candidate_dogs = dogs_k.iloc[cluster_indices].copy()
 
-    # 4) Similarity within the cluster (cosine on one-hot vectors)
+    # 4) Similarity within the candidate set
     sims = cosine_similarity(user_vec, candidate_vectors)[0]
     candidate_dogs["similarity"] = sims
 
-    # 5) Take top N
+    # 5) Take top N (now actually using top_n)
     # top_n = int(payload.get("top_n", 10))
     top_matches = (
         candidate_dogs.sort_values("similarity", ascending=False)
@@ -133,8 +149,8 @@ def api_recommend_dogs():
     # 6) Choose columns to send back
     cols_to_send = [
         "name",
-        'shelter_name',
-        'shelter_address',
+        "shelter_name",
+        "shelter_address",
         "breed_primary",
         "age",
         "size",
@@ -151,6 +167,7 @@ def api_recommend_dogs():
 
     matches = top_matches[cols_to_send].to_dict(orient="records")
     return jsonify({"matches": matches})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
