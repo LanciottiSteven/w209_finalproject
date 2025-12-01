@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 import pandas as pd
-import altair as alt
+# import altair as alt
 import numpy as np
 
 

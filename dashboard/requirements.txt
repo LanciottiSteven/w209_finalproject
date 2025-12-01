@@ -1,9 +1,5 @@
-altair
 flask
-gunicorn
-matplotlib
-networkx
+numpy
 pandas
 scikit-learn
-seaborn
 joblib
