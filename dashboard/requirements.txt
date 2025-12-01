@@ -7,4 +7,3 @@ pandas
 scikit-learn
 seaborn
 joblib
-sklearn
