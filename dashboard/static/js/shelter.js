@@ -52,6 +52,10 @@
     // Recommender form elements
     const matchFormEl = document.getElementById("matchForm");
     const matchResultsEl = document.getElementById("matchResults");
+
+    const originTreemapContainer = document.getElementById("originTreemapContainer");
+    const originTreemapSvgEl = document.getElementById("originTreemap");
+
   
     // ---------- BUILD SHELTER LIST ----------
     const shelterMap = new Map();
@@ -510,7 +514,279 @@
         .attr("font-size", "10px")
         .text((d) => d.name);
     }
-  
+    function renderOriginTreemap(baseRows, shelterName) {
+        if (!originTreemapContainer || !originTreemapSvgEl) return;
+      
+        const svg = d3.select(originTreemapSvgEl);
+        svg.selectAll("*").remove();
+      
+        // 🚫 Don't render anything meaningful until a specific shelter is selected
+        if (!shelterName || shelterName === "ALL") {
+          svg
+            .attr("width", originTreemapContainer.clientWidth || 600)
+            .attr("height", 320)
+            .append("text")
+            .attr("x", "50%")
+            .attr("y", "50%")
+            .attr("text-anchor", "middle")
+            .attr("fill", "#999")
+            .style("font-size", "11px")
+            .text("Select a shelter to view treemap.");
+          return;
+        }
+      
+        // ✅ Filter rows to the selected shelter
+        let rows = (baseRows || []).filter(
+          (r) => r[SHELTER_FIELD] === shelterName
+        );
+      
+        // Apply same filters as cards (breed + origin)
+        if (selectedBreed) {
+          rows = rows.filter((d) => {
+            const b = (d.breed_primary || "Unknown").trim();
+            return b === selectedBreed;
+          });
+        }
+        if (selectedOrigin) {
+          rows = rows.filter((d) => {
+            const o = (d[FOUND_FIELD] || "Unknown origin").trim();
+            return o === selectedOrigin;
+          });
+        }
+      
+        if (!rows || !rows.length) {
+          svg
+            .attr("width", originTreemapContainer.clientWidth || 600)
+            .attr("height", 320)
+            .append("text")
+            .attr("x", "50%")
+            .attr("y", "50%")
+            .attr("text-anchor", "middle")
+            .attr("fill", "#999")
+            .style("font-size", "11px")
+            .text("No data for treemap.");
+          return;
+        }
+      
+        // ---- Build hierarchy: Origin -> Breed -> Dog ----
+        const byOrigin = d3.group(
+          rows,
+          (d) => (d[FOUND_FIELD] || "Unknown origin").toString().trim(),
+          (d) => (d.breed_primary || "Unknown").toString().trim()
+        );
+      
+        const rootData = {
+          name: "All origins",
+          children: Array.from(byOrigin, ([origin, breedsMap]) => ({
+            name: origin,
+            children: Array.from(breedsMap, ([breed, dogs]) => ({
+              name: breed,
+              children: dogs.map((dog) => ({
+                name: dog.name || "Unknown",
+                value: 1,
+                origin,
+                breed,
+              })),
+            })),
+          })),
+        };
+      
+        // Layout dimensions (shared across zoom levels)
+        const margin = { top: 18, right: 16, bottom: 16, left: 16 };
+        const fullWidth = originTreemapContainer.clientWidth || 600;
+        const fullHeight = 300;  // match Sankey height
+        const width = fullWidth - margin.left - margin.right;
+        const height = fullHeight - margin.top - margin.bottom;
+
+        svg.attr("width", fullWidth).attr("height", fullHeight);
+
+
+                
+      
+        const fullRootData = rootData; // keep original for "Back" behavior
+      
+        // Shared tooltip
+        let tooltip = d3.select("#originTreemapTooltip");
+        if (tooltip.empty()) {
+          tooltip = d3
+            .select("body")
+            .append("div")
+            .attr("id", "originTreemapTooltip")
+            .style("position", "absolute")
+            .style("pointer-events", "none")
+            .style("background", "rgba(0,0,0,0.8)")
+            .style("color", "#fff")
+            .style("padding", "4px 8px")
+            .style("border-radius", "4px")
+            .style("font-size", "11px")
+            .style("opacity", 0);
+        }
+      
+        /**
+         * Draw a treemap view for the given "currentData" subtree.
+         * currentData is an object with {name, children...} like rootData or one of its children.
+         */
+        function drawTreemap(currentData, levelLabel) {
+          svg.selectAll("*").remove();
+      
+          const g = svg
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+      
+          // Build hierarchy for this subtree
+          const root = d3
+            .hierarchy(currentData)
+            .sum((d) => (d.value ? d.value : 0))
+            .sort((a, b) => (b.value || 0) - (a.value || 0));
+      
+          d3
+            .treemap()
+            .size([width, height])
+            .paddingInner(1)
+            .paddingOuter(2)(root);
+      
+          // Show one level down from current root (children)
+          const nodes = root.children || [];
+      
+          // Header label / breadcrumb
+          g
+            .append("text")
+            .attr("x", 2)
+            .attr("y", -4)
+            .attr("fill", "#111")
+            .style("font-size", "11px")
+            .style("font-weight", "600")
+            .text(levelLabel || "Origins");
+      
+          // "Back" link when not at top
+          if (currentData !== fullRootData) {
+            g
+              .append("text")
+              .attr("x", width)
+              .attr("y", -4)
+              .attr("text-anchor", "end")
+              .attr("fill", "#2563eb")
+              .style("font-size", "11px")
+              .style("cursor", "pointer")
+              .text("⟵ Back to origins")
+              .on("click", () => drawTreemap(fullRootData, "Origins"));
+          }
+      
+          const nodeGroups = g
+            .selectAll("g.treemap-node")
+            .data(nodes)
+            .join("g")
+            .attr("class", "treemap-node")
+            .attr("transform", (d) => `translate(${d.x0},${d.y0})`);
+      
+          // Color by origin (use dog.origin if present; otherwise use node name)
+          const allLeaves = root.leaves();
+          const color = d3
+            .scaleOrdinal(d3.schemeCategory10)
+            .domain(
+              Array.from(
+                new Set(
+                  allLeaves.map(
+                    (d) => d.data.origin || d.parent?.parent?.data.name || d.data.name
+                  )
+                )
+              )
+            );
+      
+          nodeGroups
+            .append("rect")
+            .attr("width", (d) => Math.max(0, d.x1 - d.x0))
+            .attr("height", (d) => Math.max(0, d.y1 - d.y0))
+            .attr("fill", (d) => {
+              // Leaves (dogs) have d.data.origin; origins / breeds won't
+              const originName =
+                d.data.origin || d.parent?.parent?.data.name || d.data.name;
+              return color(originName);
+            })
+            .attr("stroke", "#fff")
+            .on("mouseover", function (event, d) {
+              d3.select(this).attr("stroke", "#000");
+      
+              const isRootLevel = currentData === fullRootData;
+              const hasChildren = !!d.children && d.children.length > 0;
+              let html = "";
+      
+              if (isRootLevel && hasChildren) {
+                // Origin level
+                html = `<strong>Origin:</strong> ${d.data.name}<br/>
+                        Dogs: ${d.value || 0}`;
+              } else if (!isRootLevel && hasChildren) {
+                // Breed level within a specific origin
+                const originName = currentData.name;
+                html = `<strong>Breed:</strong> ${d.data.name}<br/>
+                        Origin: ${originName}<br/>
+                        Dogs: ${d.value || 0}`;
+              } else {
+                // Leaf (dog) level
+                const originName =
+                  d.data.origin || currentData.origin || currentData.name;
+                html = `<strong>Dog:</strong> ${d.data.name}<br/>
+                        Breed: ${d.data.breed || currentData.name}<br/>
+                        Origin: ${originName}`;
+              }
+      
+              tooltip.style("opacity", 1).html(html);
+            })
+            .on("mousemove", function (event) {
+              tooltip
+                .style("left", event.pageX + 12 + "px")
+                .style("top", event.pageY - 20 + "px");
+            })
+            .on("mouseout", function () {
+              d3.select(this).attr("stroke", "#fff");
+              tooltip.style("opacity", 0);
+            })
+            .on("click", function (event, d) {
+              // Drill down only if node has children
+              if (d.children && d.children.length) {
+                let nextLabel;
+                const isRootLevel = currentData === fullRootData;
+      
+                if (isRootLevel) {
+                  // Going from Origins -> Breeds
+                  nextLabel = `Breeds from ${d.data.name}`;
+                } else {
+                  // Going from Breeds -> Dogs
+                  nextLabel = `Dogs in ${d.data.name}`;
+                }
+      
+                drawTreemap(d.data, nextLabel);
+              }
+            });
+      
+          // Short label (name) inside each tile
+          nodeGroups
+            .append("text")
+            .attr("x", 3)
+            .attr("y", 11)
+            .attr("font-size", "9px")
+            .attr("fill", "#000")
+            .attr("pointer-events", "none")
+            .text((d) => d.data.name)
+            .each(function (d) {
+              const rectWidth = d.x1 - d.x0;
+              const text = d3.select(this);
+              const textNode = this;
+              if (textNode.getComputedTextLength() > rectWidth - 6) {
+                let txt = d.data.name;
+                while (txt.length && textNode.getComputedTextLength() > rectWidth - 10) {
+                  txt = txt.slice(0, -1);
+                  text.text(txt + "…");
+                }
+              }
+            });
+        }
+      
+        // 🔰 Initial view: Origins level
+        drawTreemap(fullRootData, "Origins");
+      }
+      
+      
     // ---------- BREED FORCE NETWORK ----------
     function renderBreedForceGraph(rows, shelterName) {
       if (!breedForceContainer || !breedForceSvgEl) return;
@@ -1364,6 +1640,7 @@
       updateCarouselMetrics(rows, shelterName);
       renderBreedChart(rows, shelterName);
       renderOriginsSankey(rows, shelterName);
+      renderOriginTreemap(rows, shelterName);
       renderBreedForceGraph(rows, shelterName);
       renderDogCards(rows, shelterName);
     }

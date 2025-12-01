@@ -213,3 +213,17 @@ main.col-md-9 .border-bottom {
   background-color: transparent;
   padding: 0;
 }
+
+/* Keep origins charts neatly inside their panels */
+#originSankeyContainer,
+#originTreemapContainer {
+  overflow: hidden;           /* hide any tiny overspill edges */
+}
+
+/* Make SVGs behave like block-level, responsive elements */
+#originSankey,
+#originTreemap {
+  display: block;
+  max-width: 100%;
+}
+
