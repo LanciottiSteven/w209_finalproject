@@ -4,6 +4,7 @@ gunicorn
 matplotlib
 networkx
 pandas
+pyarrow
 scikit-learn
 seaborn
 joblib
