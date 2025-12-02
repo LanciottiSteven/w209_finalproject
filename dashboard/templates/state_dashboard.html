@@ -262,6 +262,38 @@
         max-width: 900px;
         margin: 0 auto;
       }
+
+      /* ===== Gender legend for pie charts ===== */
+      .chart-legend {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #374151;
+      }
+
+      .legend-swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        margin-right: 6px;
+      }
+
+      /* Match your chart colors here */
+      .legend-male {
+        background: #446a9f; /* blue */
+      }
+
+      .legend-female {
+        background: #f29b2c; /* orange */
+      }
     </style>
   </head>
 
@@ -388,6 +420,18 @@
 
                 <!-- Out-of-state demographics -->
                 <h3 class="section-title">Out-of-State Dog Demographics</h3>
+                <!-- Gender legend -->
+                <div class="chart-legend">
+                  <div class="legend-item">
+                    <span class="legend-swatch legend-male"></span>
+                    <span>Male</span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-swatch legend-female"></span>
+                    <span>Female</span>
+                  </div>
+                </div>
+
                 <div class="observable-row">
                   <div class="observable-panel">
                     <h4 class="chart-subtitle">
