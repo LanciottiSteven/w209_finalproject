@@ -238,22 +238,23 @@
         border-color: #e5e7eb;
       }
 
-      #observablehq-partnerStatesOnly-6a33d79e svg {
+      #observablehq-partnerStatesOnly-bd01654b svg {
         background-color: #f5f5f5 !important;
       }
 
-      #observablehq-partnerStatesOnly-6a33d79e text {
-        font-size: 1rem !important;
-        fill: #111827 !important;
+      #observablehq-partnerStatesOnly-bd01654b text {
+        font-size: 1.5rem;
+        fill: white !important;
+        text-shadow: -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
           sans-serif !important;
       }
 
       /* Flow map: light background too */
-      #observablehq-flowMap-00c503e1 svg {
+      #observablehq-flowMap-83ba4e7e svg {
         background-color: #f5f5f5 !important;
       }
-      #observablehq-flowMap-00c503e1 svg rect {
+      #observablehq-flowMap-83ba4e7e svg rect {
         fill: #f5f5f5 !important;
       }
 
@@ -412,11 +413,11 @@
                 <div class="observable-row">
                   <div class="observable-panel">
                     <h4 class="chart-subtitle">Flow Map</h4>
-                    <div id="observablehq-flowMap-00c503e1"></div>
+                    <div id="observablehq-flowMap-83ba4e7e"></div>
                   </div>
                   <div class="observable-panel partner-panel">
                     <h4 class="chart-subtitle">Partner States Network</h4>
-                    <div id="observablehq-partnerStatesOnly-6a33d79e"></div>
+                    <div id="observablehq-partnerStatesOnly-bd01654b"></div>
                   </div>
                 </div>
 
@@ -567,7 +568,7 @@
               Runtime,
               Inspector
             } from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@5/dist/runtime.js";
-            import define from "https://api.observablehq.com/d/a4c869afa6166459@533.js?v=4";
+            import define from "https://api.observablehq.com/d/a4c869afa6166459@579.js?v=4";
 
             new Runtime().module(define, (name) => {
               if (name === "viewof flowMode")
@@ -586,13 +587,13 @@
               if (name === "partnerStatesOnly")
                 return new Inspector(
                   document.querySelector(
-                    "#observablehq-partnerStatesOnly-6a33d79e"
+                    "#observablehq-partnerStatesOnly-bd01654b"
                   )
                 );
               if (name === "flowMap")
                 return new Inspector(
                   document.querySelector(
-                    "#observablehq-flowMap-00c503e1"
+                    "#observablehq-flowMap-83ba4e7e"
                   )
                 );
 
